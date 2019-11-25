@@ -19,5 +19,11 @@ This project includes following technologies:
 
 Game logic through Javascript and visuals with HTML5 Canvas.
 
+## Wireframe 
+This app will consist of a landing page, with a start button and a link to information on game controls. When the start button is clicked, the game will start and the player will be lead to another page with their 
+
 ## Implementation Timeline
 
+* **Day 1**: Setup project. Implement player movement and mouse tracking.
+* **Day 2**: Implement map interation, including walls, bullet bouncing and teleporters.
+* **Day 3**: Create custom maps.
