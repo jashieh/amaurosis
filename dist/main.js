@@ -105,6 +105,7 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     options.radius = Bullet.RADIUS;
     super(options);
     this.bounceCount = 0;
+    this.type = "";
   }
 
   bounce(direction) {
@@ -167,6 +168,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./player */ "./lib/player.js");
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
 /* harmony import */ var _wall__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./wall */ "./lib/wall.js");
+/* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
+
 
 
 
@@ -176,6 +179,7 @@ class Game {
     this.players = [];
     this.bullets = [];
     this.walls = [];
+    this.portals = [];
 
     this.addWall();
   }
@@ -188,6 +192,8 @@ class Game {
       this.bullets.push(object);
     } else if (object instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"]) {
       this.walls.push(object);
+    } else if (object instanceof _portal__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+      this.portals.push(object);
     }
   }
 
@@ -224,6 +230,28 @@ class Game {
       game: this
     });
     this.add(wall2);
+    let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
+      topLeft: [250,250],
+      bottomRight: [310,310],
+      direction: "horizontal",
+      game: this,
+      dir: "right"
+    });
+
+    let portal2 = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
+      topLeft: [100,100],
+      bottomRight: [150,150],
+      direction: "horizontal",
+      game: this,
+      connectedTo: portal,
+      dir: "up"
+    });
+
+    portal.connect(portal2);
+
+
+    this.add(portal);
+    this.add(portal2);
 
   }
 
@@ -232,7 +260,7 @@ class Game {
   }
 
   allObjects() {
-    return [].concat(this.players, this.bullets, this.walls);
+    return [].concat(this.players, this.bullets, this.walls, this.portals);
   }
 
   draw(ctx) {
@@ -251,7 +279,7 @@ class Game {
   }
 
   moveObjects(delta) {
-    this.allObjects().forEach(object => {
+    this.allMovingObjects().forEach(object => {
       if(!(object instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"] || object instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"]))
         object.move(delta);
     });
@@ -318,6 +346,19 @@ class Game {
     }
   }
 
+  portalCollision(pos) {
+    for(let i = 0; i < this.portals.length; i++) {
+      let portal = this.portals[i];
+      if( !((pos[0] < portal.topLeft[0]) 
+        || (pos[0] > portal.bottomRight[0])
+        || (pos[1] < portal.topLeft[1])
+        || (pos[1] > portal.bottomRight[1]))) {
+          return portal;
+      } 
+    }
+    return false;
+  }
+
   checkCollissions() {
     const allObjects = this.allMovingObjects();
 
@@ -336,6 +377,12 @@ class Game {
           if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             console.log("collision")
             this.remove(obj2);
+          }
+
+          if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            console.log("hit")
+          } else if (obj2 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            console.log("hit")
           }
           // const collision = obj1.collideWith(obj2);
           // if (collision) return;
@@ -595,7 +642,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.updateCursorPostion();
     this.cursorPostion = [0,0];
-    this.angle = 0;
   }
 
   power(delta) {
@@ -621,6 +667,17 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const topRight = [newX + radX, newY - radY];
     const botRight = [newX + radX, newY + radY];
 
+    if(this.game.portalCollision([this.pos[0], newY]))
+      return this.game.portalCollision([this.pos[0], newY]).teleport(this);
+    else if(this.game.portalCollision(botLeft))
+      return this.game.portalCollision(botLeft).teleport(this);
+    else if(this.game.portalCollision(topRight))
+      return this.game.portalCollision(topRight).teleport(this);
+    else if(this.game.portalCollision(botRight))
+      return this.game.portalCollision(botRight).teleport(this);
+
+    
+
     if(this.game.wallCollision(topLeft)
       || this.game.wallCollision(botLeft)
       || this.game.wallCollision(topRight)
@@ -631,26 +688,12 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.pos = [newX, newY];
   }
 
-
-
-  // radToDeg(angle) {
-  //   return angle * (180 / Math.PI);
-  // }
-
-  // degToRad(angle) {
-  //   return angle * (Math.PI / 180);
-  // }
-
   mouseAngle() {
     let vect = _util__WEBPACK_IMPORTED_MODULE_2___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let x = vect[0];
     let y = vect[1];
 
-    // angle[0] *= this.radius;
-    // angle[1] *= this.radius;
-
-    // this.angle = Math.atan2(y,x);
     return Math.atan2(y,x);
   }
 
@@ -670,7 +713,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
 
-
     const pi = Math.PI;
     const radX = Math.cos(angle)*this.radius;
     const radY = Math.sin(angle)*this.radius;
@@ -689,11 +731,13 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.game.add(bullet);
   }
 
-  shield() {
+  createPortal() {
 
   }
 
+  shield() {
 
+  }
 
   updateCursorPostion() {
     window.addEventListener('mousemove', (e) => {
@@ -719,6 +763,61 @@ Player.MOVES = {
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (Player);
+
+/***/ }),
+
+/***/ "./lib/portal.js":
+/*!***********************!*\
+  !*** ./lib/portal.js ***!
+  \***********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _static_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./static_object */ "./lib/static_object.js");
+
+
+class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(options) {
+    super(options);
+    this.passable = true;
+    this.color = "#00FF00";
+    this.connectedTo = options.connectedTo;
+    this.pos = options.bottomRight;
+    this.dir = options.dir;
+  }
+
+  teleport(player) {
+    if(this.connectedTo.dir === "up") {
+      player.pos[0] = this.connectedTo.pos[0];
+      player.pos[1] = this.connectedTo.pos[1] - Portal.OFFSET;
+    }
+    else if(this.connectedTo.dir === "down") {
+      player.pos[0] = this.connectedTo.pos[0];
+      player.pos[1] = this.connectedTo.pos[1] + Portal.OFFSET;
+    }
+    else if(this.connectedTo.dir === "left") {
+      player.pos[0] = this.connectedTo.pos[0] - Portal.OFFSET;
+      player.pos[1] = this.connectedTo.pos[1];
+    }
+
+    else if(this.connectedTo.dir === "right") {
+      player.pos[0] = this.connectedTo.pos[0] + Portal.OFFSET;
+      player.pos[1] = this.connectedTo.pos[1];
+    }
+
+  }
+
+  connect(otherPortal) {
+    this.connectedTo = otherPortal;
+  }
+
+}
+
+Portal.OFFSET = 20;
+
+/* harmony default export */ __webpack_exports__["default"] = (Portal);
 
 /***/ }),
 
