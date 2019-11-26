@@ -96,6 +96,8 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./moving_object */ "./lib/moving_object.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
 
 
 class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
@@ -108,16 +110,46 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   bounce(direction) {
     if(direction === "horizontal") {
       this.vel[1] *= -1;
+    } else if (direction === "vertical") {
+      this.vel[0] *= -1;
     } else {
       this.vel[0] *= -1;
+      this.vel[1] *= -1;
     }
     this.bounceCount++;
+  }
+
+
+
+  move(timeDelta) {
+    const NORMAL_FRAME_TIME_DELTA = 1000 / _game__WEBPACK_IMPORTED_MODULE_1__["default"].FPS,
+      velocityScale = timeDelta / NORMAL_FRAME_TIME_DELTA,
+      offsetX = this.vel[0] * velocityScale,
+      offsetY = this.vel[1] * velocityScale;
+
+    const newX = this.pos[0] + offsetX;
+    const newY = this.pos[1] + offsetY;
+
+    const collisionX = this.game.wallCollision([this.pos[0], newY]);
+    const collisionY = this.game.wallCollision([newX, this.pos[1]]);
+    const collisionXY = this.game.wallCollision([newX, newY]);
+
+    if(collisionX) {
+      this.bounce("horizontal");
+    } else if (collisionY) {
+      this.bounce("vertical");
+    } else if (collisionXY) {
+      this.bounce("both");
+    }
+
+    this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
+      this.pos[1] + (this.vel[1] * velocityScale)];
   }
 }
 
 Bullet.RADIUS = 2;
-Bullet.SPEED = 4;
-Bullet.LIFESPAN = 1;
+Bullet.SPEED = 10;
+Bullet.LIFESPAN = 5;
 
 /* harmony default export */ __webpack_exports__["default"] = (Bullet);
 
@@ -170,7 +202,7 @@ class Game {
   addPlayer() {
     const player = new _player__WEBPACK_IMPORTED_MODULE_0__["default"]({
       game: this,
-      pos: [1000,1000]
+      pos: [400,400]
     });
 
     this.add(player);
@@ -193,6 +225,10 @@ class Game {
     });
     this.add(wall2);
 
+  }
+
+  allMovingObjects() {
+    return [].concat(this.players, this.bullets);
   }
 
   allObjects() {
@@ -277,25 +313,31 @@ class Game {
         || (pos[0] > wall.bottomRight[0])
         || (pos[1] < wall.topLeft[1])
         || (pos[1] > wall.bottomRight[1]))) {
-          console.log("hit wall")
           return true;
       } 
     }
   }
 
   checkCollissions() {
-    const allObjects = this.allObjects();
+    const allObjects = this.allMovingObjects();
 
     for(let i = 0; i < allObjects.length; i++) {
       for(let j = 0; j < allObjects.length; j++) {
         if(i === j) continue;
         const obj1 = allObjects[i];
         const obj2 = allObjects[j];
-        if(obj1 instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"] || obj2 instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"]) continue; 
 
         if (obj1.isCollidedWith(obj2)) {
+          if(obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            this.remove(obj1);
+            console.log("collision")
+
+          }
+          if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            console.log("collision")
+            this.remove(obj2);
+          }
           // const collision = obj1.collideWith(obj2);
-          console.log("collision")
           // if (collision) return;
           
         }
@@ -479,6 +521,8 @@ document.addEventListener("DOMContentLoaded", () => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util */ "./lib/util.js");
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
 
 
 class MovingObject {
@@ -501,7 +545,7 @@ class MovingObject {
   }
 
   move(timeDelta) {
-    const NORMAL_FRAME_TIME_DELTA = 1000 / 60,
+    const NORMAL_FRAME_TIME_DELTA = 1000 / _game__WEBPACK_IMPORTED_MODULE_1__["default"].FPS,
       velocityScale = timeDelta / NORMAL_FRAME_TIME_DELTA,
       offsetX = this.vel[0] * velocityScale,
       offsetY = this.vel[1] * velocityScale;
@@ -551,11 +595,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.updateCursorPostion();
     this.cursorPostion = [0,0];
-    this.angle = [0,0];
+    this.angle = 0;
   }
 
   power(delta) {
-    console.log(delta);
     if(this.vel[0] > -maxSpeed && this.vel[0] < maxSpeed) {
       this.vel[0] += delta[0];
     }
@@ -568,6 +611,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   move(dir) {
     const newX = this.pos[0] + Player.MOVES[dir][0] * Player.SPEED;
     const newY = this.pos[1] + Player.MOVES[dir][1] * Player.SPEED;
+
     const pi = Math.PI;
     const radX = Math.cos(45*pi/180)*this.radius;
     const radY = Math.sin(45*pi/180)*this.radius;
@@ -598,16 +642,16 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   // }
 
   mouseAngle() {
-    let angle = _util__WEBPACK_IMPORTED_MODULE_2___default.a.dir([this.cursorPostion[0],this.pos[0]], [this.cursorPostion[1], this.pos[1]]);
-    console.log(angle)
-    angle[0] *= this.radius;
-    angle[1] *= this.radius;
+    let vect = _util__WEBPACK_IMPORTED_MODULE_2___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
+    this.cursorPostion[1] - this.pos[1]]);
+    let x = vect[0];
+    let y = vect[1];
 
     // angle[0] *= this.radius;
     // angle[1] *= this.radius;
 
-    this.angle = angle;
-    return angle;
+    // this.angle = Math.atan2(y,x);
+    return Math.atan2(y,x);
   }
 
   renderMouse(ctx) {
@@ -621,9 +665,18 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 
   fireBullet() {
+    let angle = this.mouseAngle();
     let relVel = _util__WEBPACK_IMPORTED_MODULE_2___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
+
+
+    const pi = Math.PI;
+    const radX = Math.cos(angle)*this.radius;
+    const radY = Math.sin(angle)*this.radius;
+    pos[0] += radX;
+    pos[1] += radY;
+
 
     relVel[0] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
     relVel[1] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
