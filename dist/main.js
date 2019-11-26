@@ -231,23 +231,25 @@ class Game {
     });
     this.add(wall2);
     let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
-      topLeft: [250,250],
-      bottomRight: [310,310],
+      topLeft: [250,290],
+      bottomRight: [300,300],
       direction: "horizontal",
       game: this,
-      dir: "right"
+      dir: "down"
     });
 
     let portal2 = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
       topLeft: [100,100],
-      bottomRight: [150,150],
+      bottomRight: [150,110],
       direction: "horizontal",
       game: this,
-      connectedTo: portal,
       dir: "up"
     });
-
+    
+    portal2.connect(portal);
     portal.connect(portal2);
+
+    console.log
 
 
     this.add(portal);
@@ -667,8 +669,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const topRight = [newX + radX, newY - radY];
     const botRight = [newX + radX, newY + radY];
 
-    if(this.game.portalCollision([this.pos[0], newY]))
-      return this.game.portalCollision([this.pos[0], newY]).teleport(this);
+    if(this.game.portalCollision(topLeft))
+      return this.game.portalCollision(topLeft).teleport(this);
     else if(this.game.portalCollision(botLeft))
       return this.game.portalCollision(botLeft).teleport(this);
     else if(this.game.portalCollision(topRight))
