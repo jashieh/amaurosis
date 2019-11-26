@@ -135,6 +135,12 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const collisionY = this.game.wallCollision([newX, this.pos[1]]);
     const collisionXY = this.game.wallCollision([newX, newY]);
 
+
+    if(this.game.portalCollision([this.pos[0], newY]))
+      return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
+    else if(this.game.portalCollision([newX, this.pos[1]]))
+      return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
+
     if(collisionX) {
       this.bounce("horizontal");
     } else if (collisionY) {
@@ -222,14 +228,47 @@ class Game {
       direction: "vertical",
       game: this
     });
-    this.add(wall);
+
     let wall2 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
       topLeft: [100,100],
       bottomRight: [300,300],
       direction: "vertical",
       game: this
     });
+
+    let wall3 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
+      topLeft: [0,0],
+      bottomRight: [1000,5],
+      direction: "vertical",
+      game: this
+    });
+    let wall4 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
+      topLeft: [0,0],
+      bottomRight: [5,600],
+      direction: "vertical",
+      game: this
+    });
+    let wall5 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
+      topLeft: [0,595],
+      bottomRight: [1000,600],
+      direction: "vertical",
+      game: this
+    });
+    let wall6 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
+      topLeft: [995,0],
+      bottomRight: [1000,600],
+      direction: "vertical",
+      game: this
+    });
+
+
+    this.add(wall);
     this.add(wall2);
+    this.add(wall3);
+    this.add(wall4);
+    this.add(wall5);
+    this.add(wall6);
+
     let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
       topLeft: [250,290],
       bottomRight: [300,300],
@@ -248,9 +287,6 @@ class Game {
     
     portal2.connect(portal);
     portal.connect(portal2);
-
-    console.log
-
 
     this.add(portal);
     this.add(portal2);
@@ -373,11 +409,8 @@ class Game {
         if (obj1.isCollidedWith(obj2)) {
           if(obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             this.remove(obj1);
-            console.log("collision")
-
           }
           if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
-            console.log("collision")
             this.remove(obj2);
           }
 
@@ -530,10 +563,6 @@ GameView.MOVES = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./game */ "./lib/game.js");
 /* harmony import */ var _game_view__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game_view */ "./lib/game_view.js");
-/* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./moving_object */ "./lib/moving_object.js");
-/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./player */ "./lib/player.js");
-
-
 
 
 
@@ -670,13 +699,13 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const botRight = [newX + radX, newY + radY];
 
     if(this.game.portalCollision(topLeft))
-      return this.game.portalCollision(topLeft).teleport(this);
+      return this.game.portalCollision(topLeft).teleport(this, topLeft);
     else if(this.game.portalCollision(botLeft))
-      return this.game.portalCollision(botLeft).teleport(this);
+      return this.game.portalCollision(botLeft).teleport(this, botLeft);
     else if(this.game.portalCollision(topRight))
-      return this.game.portalCollision(topRight).teleport(this);
+      return this.game.portalCollision(topRight).teleport(this, topRight);
     else if(this.game.portalCollision(botRight))
-      return this.game.portalCollision(botRight).teleport(this);
+      return this.game.portalCollision(botRight).teleport(this, botRight);
 
     
 
@@ -786,27 +815,33 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.passable = true;
     this.color = "#00FF00";
     this.connectedTo = options.connectedTo;
-    this.pos = options.bottomRight;
+
+    const x = (options.bottomRight[0] + options.topLeft[0])/2;
+    const y = (options.bottomRight[1] + options.topLeft[1])/2;
+    this.pos = [x, y];
     this.dir = options.dir;
   }
 
-  teleport(player) {
+  teleport(object, pos) {
+    let offsetX = -(this.pos[0] - pos[0]);
+    let offsetY = -(this.pos[1] - pos[1]);
+
     if(this.connectedTo.dir === "up") {
-      player.pos[0] = this.connectedTo.pos[0];
-      player.pos[1] = this.connectedTo.pos[1] - Portal.OFFSET;
+      object.pos[0] = this.connectedTo.pos[0] + offsetX;
+      object.pos[1] = this.connectedTo.pos[1] - Portal.OFFSET + offsetY;
     }
     else if(this.connectedTo.dir === "down") {
-      player.pos[0] = this.connectedTo.pos[0];
-      player.pos[1] = this.connectedTo.pos[1] + Portal.OFFSET;
+      object.pos[0] = this.connectedTo.pos[0] + offsetX;
+      object.pos[1] = this.connectedTo.pos[1] + Portal.OFFSET + offsetY;
     }
     else if(this.connectedTo.dir === "left") {
-      player.pos[0] = this.connectedTo.pos[0] - Portal.OFFSET;
-      player.pos[1] = this.connectedTo.pos[1];
+      object.pos[0] = this.connectedTo.pos[0] - Portal.OFFSET + offsetX;
+      object.pos[1] = this.connectedTo.pos[1] + offsetY;
     }
 
     else if(this.connectedTo.dir === "right") {
-      player.pos[0] = this.connectedTo.pos[0] + Portal.OFFSET;
-      player.pos[1] = this.connectedTo.pos[1];
+      object.pos[0] = this.connectedTo.pos[0] + Portal.OFFSET + offsetX;
+      object.pos[1] = this.connectedTo.pos[1] + offsetY;
     }
 
   }
@@ -817,7 +852,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 }
 
-Portal.OFFSET = 20;
+Portal.OFFSET = 15;
 
 /* harmony default export */ __webpack_exports__["default"] = (Portal);
 
