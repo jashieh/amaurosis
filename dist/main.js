@@ -105,7 +105,7 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     options.radius = Bullet.RADIUS;
     super(options);
     this.bounceCount = 0;
-    this.color = "#144b9f";
+    this.color = "#66ff00";
     this.type = "";
   }
 
@@ -676,6 +676,16 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   }
 
+  draw(ctx) {
+    ctx.fillStyle = 'rgba(255, 255, 255, .05)';
+    // ctx.fillRect(0, 0, 1000, 600);
+    ctx.beginPath();
+    ctx.fillStyle = '#ff0000';
+    ctx.moveTo(this.pos[0], this.pos[1]);
+    ctx.arc(this.pos[0] + this.vel[0], this.pos[1] + this.vel[0], 3, 0, Math.PI*2, true);
+    ctx.fill();
+  }
+
   bounce(direction) {
     if(direction === "horizontal") {
       this.vel[1] *= -1;
@@ -1218,9 +1228,12 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   toggleActive() {
+    let temp = this.connectedTo.color;
     this.connectedTo.active = false;
+    this.connectedTo.color = "#ff0000";
     setTimeout(() => {
       this.connectedTo.active = true;
+      this.connectedTo.color = temp;
     }, 500);
   }
 
