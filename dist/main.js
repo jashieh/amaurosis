@@ -105,6 +105,7 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     options.radius = Bullet.RADIUS;
     super(options);
     this.bounceCount = 0;
+    this.color = "#144b9f";
     this.type = "";
   }
 
@@ -118,6 +119,9 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.vel[1] *= -1;
     }
     this.bounceCount++;
+    if(this.bounceCount > Bullet.LIFESPAN) {
+      this.remove();
+    }
   }
 
   move(timeDelta) {
@@ -175,6 +179,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wall__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./wall */ "./lib/wall.js");
 /* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
 /* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
+/* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./light */ "./lib/light.js");
+
 
 
 
@@ -185,6 +191,7 @@ class Game {
   constructor() {
     this.players = [];
     this.bullets = [];
+    this.lights = [];
     this.walls = [];
     this.portals = [];
 
@@ -201,6 +208,8 @@ class Game {
       this.walls.push(object);
     } else if (object instanceof _portal__WEBPACK_IMPORTED_MODULE_3__["default"]) {
       this.portals.push(object);
+    } else if (object instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"]) {
+      this.lights.push(object);
     }
   }
 
@@ -209,6 +218,8 @@ class Game {
       this.bullets.splice(this.bullets.indexOf(object), 1);
     } else if (object instanceof _portal__WEBPACK_IMPORTED_MODULE_3__["default"]) {
       this.portals.splice(this.portals.indexOf(object), 1);
+    } else if (object instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"]) {
+      this.lights.splice(this.lights.indexOf(object), 1);
     } else {
       throw new Error("unknown type of object");
     }
@@ -299,7 +310,7 @@ class Game {
   }
 
   allObjects() {
-    return [].concat(this.players, this.bullets, this.walls, this.portals);
+    return [].concat(this.players, this.bullets, this.walls, this.portals, this.lights);
   }
 
   draw(ctx) {
@@ -309,8 +320,7 @@ class Game {
       this.players[0].removePortals();
     }
 
-    
-    this.checkBounce();
+    // this.checkBounce();
     
     this.wallCollision(this.players[0].pos);
     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
@@ -333,6 +343,10 @@ class Game {
       if(!(object instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"] || object instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"]))
         object.move(delta);
     });
+
+    this.lights.forEach(object => {
+      object.move(delta);
+    });
   }
 
   step(delta) {
@@ -346,18 +360,18 @@ class Game {
   }
 
   checkBounce() {
-    for(let i = 0; i < this.bullets.length; i++) {
-      if(this.bullets[i].pos[0] < 0 || this.bullets[i].pos[0] > Game.DIM_X) {
-        this.bullets[i].bounce("vertical");
-      } 
-      else if(this.bullets[i].pos[1] < 0 || this.bullets[i].pos[1] > Game.DIM_Y) {
-        this.bullets[i].bounce("horizontal");
-      } 
+    // for(let i = 0; i < this.bullets.length; i++) {
+    //   if(this.bullets[i].pos[0] < 0 || this.bullets[i].pos[0] > Game.DIM_X) {
+    //     this.bullets[i].bounce("vertical");
+    //   } 
+    //   else if(this.bullets[i].pos[1] < 0 || this.bullets[i].pos[1] > Game.DIM_Y) {
+    //     this.bullets[i].bounce("horizontal");
+    //   } 
 
-      if(this.bullets[i].bounceCount > _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].LIFESPAN) {
-        this.bullets[i].remove();
-      }
-    }
+    //   if(this.bullets[i].bounceCount > Bullet.LIFESPAN) {
+    //     this.bullets[i].remove();
+    //   }
+    // }
   }
 
   wallCollissionCircle(player) {
@@ -410,7 +424,6 @@ class Game {
 
   checkCollissions() {
     const allObjects = this.allMovingObjects();
-
     for(let i = 0; i < allObjects.length; i++) {
       for(let j = 0; j < allObjects.length; j++) {
         if(i === j) continue;
@@ -418,14 +431,17 @@ class Game {
         const obj2 = allObjects[j];
 
         if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
-          && !obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"]) {
+          && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
+
           if(obj1.shielding && obj1.shieldHealth > 0 && obj1.checkShieldHit(obj2)) {
             obj1.shieldHealth--;
             this.remove(obj2);
+            console.log("shield");
           }
         }
 
         if (obj1.isCollidedWith(obj2)) {
+
           // if(obj1 instanceof Bullet && !(obj2 instanceof Bullet)) {
           //   this.remove(obj1);
           // }
@@ -433,7 +449,7 @@ class Game {
           //   this.remove(obj2);
           // }
           if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
-            && !obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"]) {
+            && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
             obj1.health--;
             this.remove(obj2);
             console.log(obj1.health);
@@ -507,6 +523,10 @@ class GameView {
     key("e", () => { 
       if(!this.player.portalCooldown)
         this.player.fireBullet("portal"); 
+    });
+
+    key("f", () => { 
+        this.player.shineLight(); 
     });
 
 
@@ -657,6 +677,9 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     options.radius = 1;
     super(options);
+    this.bounceCount = 0;
+    this.color = "#ffffff";
+
   }
 
   bounce(direction) {
@@ -667,6 +690,9 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     } else {
       this.vel[0] *= -1;
       this.vel[1] *= -1;
+    }
+    if(this.bounceCount > Light.LIFESPAN) {
+      this.remove();
     }
     this.bounceCount++;
   }
@@ -702,10 +728,44 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
       this.pos[1] + (this.vel[1] * velocityScale)];
   }
-
-  
-
 }
+
+const cos15 = Math.cos((15/180) * Math.PI);
+const sin15 = Math.sin((15/180) * Math.PI);
+
+const cos30 = Math.sqrt(3)/2;
+const sin30 = 1/2;
+
+
+Light.LIFESPAN = 10;
+Light.SPEED = 5;
+Light.DIRECTIONS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+
+  [sin30, cos30],
+  [sin30, -cos30],
+  [-sin30, cos30],
+  [-sin30, -cos30],
+
+  [cos30, sin30],
+  [-cos30, sin30],
+  [cos30, -sin30],
+  [-cos30, -sin30],
+
+  [cos15, sin15],
+  [-cos15, sin15],
+  [cos15, -sin15],
+  [-cos15, -sin15],
+
+  [sin15, cos15],
+  [-sin15, cos15],
+  [sin15, -cos15],
+  [-sin15, -cos15],
+
+]
 
 /* harmony default export */ __webpack_exports__["default"] = (Light);
 
@@ -919,7 +979,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       }
     }
 
-    
   }
 
   connectPortals() {
@@ -955,6 +1014,22 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   checkShieldHit(otherObject) {
     const centerDist = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dist(this.pos, otherObject.pos);
     return centerDist < (this.radius + this.shieldHealth * 5 + otherObject.radius);
+  }
+
+  shineLight() {
+    for(let i = 0; i < _light__WEBPACK_IMPORTED_MODULE_3__["default"].DIRECTIONS.length; i++) {
+      let relVel = _light__WEBPACK_IMPORTED_MODULE_3__["default"].DIRECTIONS[i].slice();
+      relVel[0] *= _light__WEBPACK_IMPORTED_MODULE_3__["default"].SPEED;
+      relVel[1] *= _light__WEBPACK_IMPORTED_MODULE_3__["default"].SPEED;
+
+      let light = new _light__WEBPACK_IMPORTED_MODULE_3__["default"]({
+        pos: this.pos,
+        vel: relVel,
+        game: this.game
+      });
+
+      this.game.add(light);
+    }
   }
 
 
@@ -1002,6 +1077,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _static_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./static_object */ "./lib/static_object.js");
 /* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./player */ "./lib/player.js");
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
+/* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./light */ "./lib/light.js");
+
 
 
 
@@ -1063,7 +1140,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
         object.pos[0] = this.connectedTo.pos[0] + Portal.OFFSET + offsetX;
         object.pos[1] = this.connectedTo.pos[1] + offsetY;
       }
-    } else if(this.connectedTo && (object instanceof _bullet__WEBPACK_IMPORTED_MODULE_2__["default"])) {
+    } else if(this.connectedTo && (object instanceof _bullet__WEBPACK_IMPORTED_MODULE_2__["default"] || object instanceof _light__WEBPACK_IMPORTED_MODULE_3__["default"])) {
       let offsetX = -(this.pos[0] - pos[0]);
       let offsetY = -(this.pos[1] - pos[1]);
   
@@ -1179,7 +1256,7 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
     super(options);
     this.player = options.player;
 
-    this.color = "#ADD8E6";
+    this.color = "#800080";
   }
 
   move(timeDelta) {
