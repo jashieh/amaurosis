@@ -120,8 +120,6 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.bounceCount++;
   }
 
-
-
   move(timeDelta) {
     const NORMAL_FRAME_TIME_DELTA = 1000 / _game__WEBPACK_IMPORTED_MODULE_1__["default"].FPS,
       velocityScale = timeDelta / NORMAL_FRAME_TIME_DELTA,
@@ -176,6 +174,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
 /* harmony import */ var _wall__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./wall */ "./lib/wall.js");
 /* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
+/* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
+
 
 
 
@@ -309,18 +309,22 @@ class Game {
       this.players[0].removePortals();
     }
 
+    
     this.checkBounce();
     
-    // this.wallCollissionCircle(this.players[0]);
     this.wallCollision(this.players[0].pos);
     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
     ctx.fillStyle = Game.BG_COLOR;
     ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
-
+    
     this.allObjects().forEach(object => {
       object.draw(ctx);
     });
 
+    if(this.players[0].shielding) {
+      this.players[0].drawShield(ctx);
+    }
+    
     this.players[0].renderMouse(ctx);
   }
 
@@ -351,7 +355,6 @@ class Game {
       } 
 
       if(this.bullets[i].bounceCount > _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].LIFESPAN) {
-        let bullet = this.bullets[i];
         this.bullets[i].remove();
       }
     }
@@ -414,19 +417,36 @@ class Game {
         const obj1 = allObjects[i];
         const obj2 = allObjects[j];
 
-        if (obj1.isCollidedWith(obj2)) {
-          if(obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"] && !(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"])) {
-            this.remove(obj1);
-          }
-          if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"] && !(obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"])) {
+        if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
+          && !obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"]) {
+          if(obj1.shielding && obj1.shieldHealth > 0 && obj1.checkShieldHit(obj2)) {
+            obj1.shieldHealth--;
             this.remove(obj2);
           }
+        }
 
-          if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+        if (obj1.isCollidedWith(obj2)) {
+          // if(obj1 instanceof Bullet && !(obj2 instanceof Bullet)) {
+          //   this.remove(obj1);
+          // }
+          // if(obj2 instanceof Bullet && !(obj1 instanceof Bullet)) {
+          //   this.remove(obj2);
+          // }
+          if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
+            && !obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"]) {
+            obj1.health--;
+            this.remove(obj2);
+            console.log(obj1.health);
             console.log("hit")
-          } else if (obj2 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj1 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
-            console.log("hit")
-          }
+          } 
+          // else if (obj2 instanceof Player && obj1 instanceof Bullet) {
+          //   obj1.health--;
+          //   this.remove(obj1);
+
+          //   console.log(obj2.health);
+
+          //   console.log("hit")
+          // }
           // const collision = obj1.collideWith(obj2);
           // if (collision) return;
           
@@ -455,6 +475,9 @@ Game.FPS = 32;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./player */ "./lib/player.js");
+
+
 class GameView {
   constructor(game, ctx) {
     this.ctx = ctx;
@@ -476,10 +499,15 @@ class GameView {
 
 
     document.addEventListener("mousedown",() => {
-      this.player.fireBullet("bullet");
+      if(!this.player.shielding) {
+        this.player.fireBullet("bullet");
+      }
     });
 
-    key("e", () => { this.player.fireBullet("portal"); });
+    key("e", () => { 
+      if(!this.player.portalCooldown)
+        this.player.fireBullet("portal"); 
+    });
 
 
     // Object.keys(GameView.MOVES).forEach((k) => {
@@ -492,25 +520,41 @@ class GameView {
     // });
   }
 
-  // w = 87; d = 68; a = 65; s = 83;
+  // w = 87; d = 68; a = 65; s = 83; q = 81; e = 69; space = 32
   keyPressed() {
-    if (keys[87] && keys[65]) {
-      this.player.move("wa");
-    } else if (keys[87] && keys[68]) {
-      this.player.move("wd");
-    } else if (keys[83] && keys[65]) {
-      this.player.move("sa");
-    } else if (keys[83] && keys[68]) {
-      this.player.move("sd");
-    } else if(keys[87]) {
-      this.player.move("w");
-    } else if (keys[65]) {
-      this.player.move("a");
-    } else if (keys[83]) {
-      this.player.move("s");
-    } else if (keys[68]) {
-      this.player.move("d");
-    } 
+    // console.log(keys);
+    if(!this.player.shielding) {
+      if (keys[87] && keys[65]) {
+        this.player.move("wa");
+      } else if (keys[87] && keys[68]) {
+        this.player.move("wd");
+      } else if (keys[83] && keys[65]) {
+        this.player.move("sa");
+      } else if (keys[83] && keys[68]) {
+        this.player.move("sd");
+      } else if(keys[87]) {
+        this.player.move("w");
+      } else if (keys[65]) {
+        this.player.move("a");
+      } else if (keys[83]) {
+        this.player.move("s");
+      } else if (keys[68]) {
+        this.player.move("d");
+      } 
+    }
+
+    if(keys[32]) {
+      this.player.shielding = true;
+
+      if(this.player.shieldHealth > _player__WEBPACK_IMPORTED_MODULE_0__["default"].MINSHIELD) {
+        this.player.shieldHealth -= 0.02;
+      }
+    } else {
+      this.player.shielding = false;
+      if(this.player.shieldHealth < _player__WEBPACK_IMPORTED_MODULE_0__["default"].MAXSHIELD) {
+        this.player.shieldHealth += 0.01;
+      }
+    }
   }
 
 
@@ -553,6 +597,7 @@ GameView.MOVES = {
   wa: []
 };
 
+
 /* harmony default export */ __webpack_exports__["default"] = (GameView);
 
 /***/ }),
@@ -593,6 +638,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /***/ }),
 
+/***/ "./lib/light.js":
+/*!**********************!*\
+  !*** ./lib/light.js ***!
+  \**********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./moving_object */ "./lib/moving_object.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
+
+
+
+class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(options) {
+    options.radius = 1;
+    super(options);
+  }
+
+  bounce(direction) {
+    if(direction === "horizontal") {
+      this.vel[1] *= -1;
+    } else if (direction === "vertical") {
+      this.vel[0] *= -1;
+    } else {
+      this.vel[0] *= -1;
+      this.vel[1] *= -1;
+    }
+    this.bounceCount++;
+  }
+
+  move(timeDelta) {
+    const NORMAL_FRAME_TIME_DELTA = 1000 / _game__WEBPACK_IMPORTED_MODULE_1__["default"].FPS,
+      velocityScale = timeDelta / NORMAL_FRAME_TIME_DELTA,
+      offsetX = this.vel[0] * velocityScale,
+      offsetY = this.vel[1] * velocityScale;
+
+    const newX = this.pos[0] + offsetX;
+    const newY = this.pos[1] + offsetY;
+
+    const collisionX = this.game.wallCollision([this.pos[0], newY]);
+    const collisionY = this.game.wallCollision([newX, this.pos[1]]);
+    const collisionXY = this.game.wallCollision([newX, newY]);
+
+
+    if(this.game.portalCollision([this.pos[0], newY]))
+      return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
+    else if(this.game.portalCollision([newX, this.pos[1]]))
+      return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
+
+    if(collisionX) {
+      this.bounce("horizontal");
+    } else if (collisionY) {
+
+      this.bounce("vertical");
+    } else if (collisionXY) {
+      this.bounce("both");
+    }
+
+    this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
+      this.pos[1] + (this.vel[1] * velocityScale)];
+  }
+
+  
+
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (Light);
+
+/***/ }),
+
 /***/ "./lib/moving_object.js":
 /*!******************************!*\
   !*** ./lib/moving_object.js ***!
@@ -614,7 +732,7 @@ class MovingObject {
     this.vel = options.vel || [0,0];
     this.radius = options.radius || 10;
     this.game = options.game;
-    this.color = options.color || "#00FF00";
+    this.color = options.color || "#ffffff";
   }
 
   draw(ctx) {
@@ -641,6 +759,7 @@ class MovingObject {
     return centerDist < (this.radius + otherObject.radius);
   };
 
+
   remove() {
     this.game.remove(this);
   };
@@ -662,22 +781,30 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./moving_object */ "./lib/moving_object.js");
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
 /* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./util */ "./lib/util.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./light */ "./lib/light.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util */ "./lib/util.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_4__);
+
 
 
 
 
 
 const maxSpeed = 3;
-const radius = 10;
+const radius = 8;
+
 class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     super(options);
     this.name = options.name || "player";
     this.radius = radius;
     this.portals = [];
+    this.health = 3;
 
+    this.portalBullets = 0;
+    this.portalCooldown = false;
+    this.shielding = false;
+    this.shieldHealth = 3;
     this.updateCursorPostion();
     this.cursorPostion = [0,0];
   }
@@ -731,7 +858,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   mouseAngle() {
-    let vect = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
+    let vect = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let x = vect[0];
     let y = vect[1];
@@ -740,8 +867,9 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   renderMouse(ctx) {
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#0000ff";
+    ctx.lineWidth = 0.7;
+    ctx.strokeStyle = "#ff0000";
+    ctx.setLineDash([5, 3]);
     ctx.beginPath();
     ctx.moveTo(this.pos[0], this.pos[1]);
     ctx.lineTo(this.cursorPostion[0], this.cursorPostion[1]);
@@ -751,11 +879,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   fireBullet(type) {
     let angle = this.mouseAngle();
-    let relVel = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
+    let relVel = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
 
-    // const pi = Math.PI;
     const radX = Math.cos(angle)*this.radius;
     const radY = Math.sin(angle)*this.radius;
     pos[0] += radX;
@@ -780,14 +907,25 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
         game: this.game,
         player: this
       });
-      // this.portals.push(portalGun);
       this.game.add(portalGun);
+      this.portalBullets++;
+
+      if(this.portalBullets === 2) {
+        this.portalCooldown = true;
+        this.portalBullets = 0;
+        setTimeout(() => {
+          this.portalCooldown = false;
+        }, 5000);
+      }
     }
+
+    
   }
 
   connectPortals() {
     this.portals[0].connect(this.portals[1]);
     this.portals[1].connect(this.portals[0]);
+
   }
 
   removePortals() {
@@ -798,9 +936,29 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   }
 
-  shield() {
-
+  drawShield(ctx) {
+    if(this.shieldHealth > 0) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#144b9f";
+      ctx.setLineDash([5, 1]);
+  
+      ctx.beginPath();
+      ctx.arc(
+        this.pos[0], this.pos[1], this.radius + this.shieldHealth * 5, 
+        0, 2 * Math.PI, true
+      );
+  
+      ctx.stroke();
+    }
   }
+
+  checkShieldHit(otherObject) {
+    const centerDist = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dist(this.pos, otherObject.pos);
+    return centerDist < (this.radius + this.shieldHealth * 5 + otherObject.radius);
+  }
+
+
+
 
   updateCursorPostion() {
     window.addEventListener('mousemove', (e) => {
@@ -824,6 +982,9 @@ Player.MOVES = {
   sa: [-sideMove, sideMove],
   sd: [sideMove, sideMove],  
 }
+
+Player.MINSHIELD = 0;
+Player.MAXSHIELD = 3;
 
 /* harmony default export */ __webpack_exports__["default"] = (Player);
 
@@ -868,14 +1029,10 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     super(options);
     this.active = true;
-    this.color = "#00FF00";
+    this.color = options.color || "#00FF00";
     this.connectedTo = null;
 
     this.pos = options.pos;
-
-    // const x = (options.bottomRight[0] + options.topLeft[0])/2;
-    // const y = (options.bottomRight[1] + options.topLeft[1])/2;
-    // this.pos = [x, y];
     this.dir = options.dir;
   }
 
@@ -995,7 +1152,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 Portal.OFFSET = 15;
 Portal.WIDTH = 25;
-Portal.HEIGHT = 10;
+Portal.HEIGHT = 5;
 
 /* harmony default export */ __webpack_exports__["default"] = (Portal);
 
@@ -1039,10 +1196,17 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 
     let portal;
+    let color;
+    if(this.player.portals.length === 0 || this.player.portals.length === 2) 
+      color = "#ffa500";
+    else 
+      color = "#99ccff";
+
     if(collisionX && offsetY < 0) {
       this.remove();
       portal = new _portal__WEBPACK_IMPORTED_MODULE_1__["default"]({
         pos: [this.pos[0], newY + 5],
+        color: color,
         game: this.game,
         dir: "down"
       });
@@ -1054,6 +1218,7 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.remove();
       portal = new _portal__WEBPACK_IMPORTED_MODULE_1__["default"]({
         pos: [newX, this.pos[1]],
+        color: color,
         game: this.game,
         dir: "up"
       });
@@ -1065,6 +1230,7 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.remove();
       portal = new _portal__WEBPACK_IMPORTED_MODULE_1__["default"]({
         pos: [newX - 5, this.pos[1]],
+        color: color,
         game: this.game,
         dir: "left"
       });
@@ -1076,6 +1242,7 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.remove();
       portal = new _portal__WEBPACK_IMPORTED_MODULE_1__["default"]({
         pos: [newX + 5, this.pos[1]],
+        color: color,
         game: this.game,
         dir: "right"
       });
@@ -1115,10 +1282,9 @@ class StaticObject {
 
     this.topLeft = options.topLeft;
     this.bottomRight = options.bottomRight;
-    this.direction = options.direction;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#0000ff";
+    this.color =  options.color || "#808080";
     this.game = options.game;
   }
 
@@ -1204,19 +1370,6 @@ class Wall extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     super(options);
     this.passable = false;
-  }
-
-  // draw(ctx) {
-  //   ctx.lineWidth = this.width;
-  //   ctx.strokeStyle = this.color;
-  //   ctx.beginPath();
-  //   ctx.moveTo(this.startPos[0], this.startPos[1]);
-  //   ctx.lineTo(this.endPos[0], this.endPos[1]);
-  //   ctx.stroke();
-  // }
-
-  collideWith(otherObj) {
-
   }
 
 
