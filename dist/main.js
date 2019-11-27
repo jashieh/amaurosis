@@ -157,7 +157,7 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 }
 
-Bullet.RADIUS = 2;
+Bullet.RADIUS = 3;
 Bullet.SPEED = 10;
 Bullet.LIFESPAN = 5;
 
@@ -515,7 +515,7 @@ class GameView {
 
 
     document.addEventListener("mousedown",() => {
-      if(!this.player.shielding) {
+      if(this.player.shieldHealth < 0.01 || !this.player.shielding) {
         this.player.fireBullet("bullet");
       }
     });
@@ -526,7 +526,9 @@ class GameView {
     });
 
     key("f", () => { 
+      if(!this.player.lightCooldown) {
         this.player.shineLight(); 
+      }
     });
 
 
@@ -543,7 +545,7 @@ class GameView {
   // w = 87; d = 68; a = 65; s = 83; q = 81; e = 69; space = 32
   keyPressed() {
     // console.log(keys);
-    if(!this.player.shielding) {
+    if(this.player.shieldHealth < 0.01 || !this.player.shielding) {
       if (keys[87] && keys[65]) {
         this.player.move("wa");
       } else if (keys[87] && keys[68]) {
@@ -608,14 +610,6 @@ const accel = 3;
 const sideMove = Math.sqrt(accel+accel)/2;
 
 const keys = {};
-
-GameView.MOVES = {
-  w: [0, -accel],
-  a: [-accel, 0],
-  s: [0, accel],
-  d: [accel, 0],
-  wa: []
-};
 
 
 /* harmony default export */ __webpack_exports__["default"] = (GameView);
@@ -737,7 +731,7 @@ const cos30 = Math.sqrt(3)/2;
 const sin30 = 1/2;
 
 
-Light.LIFESPAN = 10;
+Light.LIFESPAN = 5;
 Light.SPEED = 5;
 Light.DIRECTIONS = [
   [1, 0],
@@ -862,6 +856,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.health = 3;
 
     this.portalBullets = 0;
+    this.lightCooldown = false;
     this.portalCooldown = false;
     this.shielding = false;
     this.shieldHealth = 3;
@@ -1030,6 +1025,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
       this.game.add(light);
     }
+    this.lightCooldown = true;
+    setTimeout(() => {
+      this.lightCooldown = false;
+    }, 1000);
   }
 
 
