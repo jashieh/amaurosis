@@ -515,7 +515,8 @@ class GameView {
 
 
     document.addEventListener("mousedown",() => {
-      if(this.player.shieldHealth < 0.01 || !this.player.shielding) {
+      if(this.player.shieldHealth < 0.01 || !this.player.shielding && 
+        !this.player.reloading) {
         this.player.fireBullet("bullet");
       }
     });
@@ -673,17 +674,31 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     super(options);
     this.bounceCount = 0;
     this.color = "#ffffff";
+    this.trail = [this.pos];
 
+    this.maxLength = Light.MAX;
   }
 
+  drawTail() {
+
+  }
+  
   draw(ctx) {
-    ctx.fillStyle = 'rgba(255, 255, 255, .05)';
-    // ctx.fillRect(0, 0, 1000, 600);
+    if(this.trail.length === 0) return;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = this.color;
+    ctx.setLineDash([1, 0]);
+    
     ctx.beginPath();
-    ctx.fillStyle = '#ff0000';
     ctx.moveTo(this.pos[0], this.pos[1]);
-    ctx.arc(this.pos[0] + this.vel[0], this.pos[1] + this.vel[0], 3, 0, Math.PI*2, true);
-    ctx.fill();
+    ctx.lineTo(this.trail[0][0], this.trail[0][1]);
+    ctx.stroke();
+    
+    // ctx.fillStyle = this.color;
+    // ctx.arc(
+    //   this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, true
+    // );
+    // ctx.fill();
   }
 
   bounce(direction) {
@@ -695,6 +710,16 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.vel[0] *= -1;
       this.vel[1] *= -1;
     }
+
+    const reflection = new Light({
+      pos: this.pos,
+      vel: this.vel,
+      game: this.game
+    });
+
+    this.game.add(reflection);
+    this.vel = [0, 0];
+
     if(this.bounceCount > Light.LIFESPAN) {
       this.remove();
     }
@@ -715,10 +740,10 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const collisionXY = this.game.wallCollision([newX, newY]);
 
 
-    if(this.game.portalCollision([this.pos[0], newY]))
-      return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
-    else if(this.game.portalCollision([newX, this.pos[1]]))
-      return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
+    // if(this.game.portalCollision([this.pos[0], newY]))
+    //   return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
+    // else if(this.game.portalCollision([newX, this.pos[1]]))
+    //   return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
 
     if(collisionX) {
       this.bounce("horizontal");
@@ -729,8 +754,15 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.bounce("both");
     }
 
+    
     this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
-      this.pos[1] + (this.vel[1] * velocityScale)];
+    this.pos[1] + (this.vel[1] * velocityScale)];
+    
+    this.trail.push(this.pos);
+
+    if(this.trail.length > Light.MAX) {
+      this.trail.shift();
+    }
   }
 }
 
@@ -743,6 +775,8 @@ const sin30 = 1/2;
 
 Light.LIFESPAN = 5;
 Light.SPEED = 5;
+Light.MAX = 40;
+
 Light.DIRECTIONS = [
   [1, 0],
   [-1, 0],
@@ -863,13 +897,16 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.name = options.name || "player";
     this.radius = radius;
     this.portals = [];
-    this.health = 3;
+    this.health = Player.MAX_HEALTH;
+
+    this.bullets = Player.MAX_BULLETS; 
+    this.reloading = false;
 
     this.portalBullets = 0;
     this.lightCooldown = false;
     this.portalCooldown = false;
     this.shielding = false;
-    this.shieldHealth = 3;
+    this.shieldHealth = Player.MAX_SHIELD;
     this.updateCursorPostion();
     this.cursorPostion = [0,0];
   }
@@ -965,6 +1002,18 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
 
       this.game.add(bullet);
+      this.bullets--;
+      console.log(`Ammo: ${this.bullets}`);
+
+      if(this.bullets <= 0) {
+        console.log('reloading...');
+        this.reloading = true;
+        this.bullets = Player.MAX_BULLETS;
+        setTimeout(() => {
+          this.reloading = false;
+        }, 1500);
+      }
+
     } else if (type === "portal") {
       const portalGun = new _portal_gun__WEBPACK_IMPORTED_MODULE_2__["default"]({
         pos: pos,
@@ -982,6 +1031,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           this.portalCooldown = false;
         }, 5000);
       }
+      
     }
 
   }
@@ -1055,6 +1105,11 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 const sideMove = Math.sqrt(2)/2;
 
+Player.MAX_BULLETS = 12;
+Player.MAX_HEALTH = 3;
+Player.MINSHIELD = 0;
+Player.MAX_SHIELD = 3;
+
 Player.SPEED = 3;
 Player.MOVES = {
   w: [0, -1],
@@ -1067,8 +1122,6 @@ Player.MOVES = {
   sd: [sideMove, sideMove],  
 }
 
-Player.MINSHIELD = 0;
-Player.MAXSHIELD = 3;
 
 /* harmony default export */ __webpack_exports__["default"] = (Player);
 
