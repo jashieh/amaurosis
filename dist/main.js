@@ -425,7 +425,7 @@ class Game {
 
     
     this.players[0].renderMouse(ctx);
-    
+
     this.allObjects().forEach(object => {
       object.draw(ctx, xView, yView);
     });
@@ -1026,10 +1026,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./moving_object */ "./lib/moving_object.js");
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
 /* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
-/* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./light */ "./lib/light.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util */ "./lib/util.js");
-/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+/* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
+/* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./light */ "./lib/light.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./util */ "./lib/util.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
 
 
 
@@ -1112,7 +1114,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   mouseAngle() {
-    let vect = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
+    let vect = _util__WEBPACK_IMPORTED_MODULE_5___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let x = vect[0];
     let y = vect[1];
@@ -1133,7 +1135,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   fireBullet(type) {
     let angle = this.mouseAngle();
-    let relVel = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
+    let relVel = _util__WEBPACK_IMPORTED_MODULE_5___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
 
@@ -1191,7 +1193,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   connectPortals() {
     this.portals[0].connect(this.portals[1]);
     this.portals[1].connect(this.portals[0]);
-
+    this.portals[0].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
+    this.portals[1].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
   }
 
   removePortals() {
@@ -1219,18 +1222,18 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   checkShieldHit(otherObject) {
-    const centerDist = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dist(this.pos, otherObject.pos);
+    const centerDist = _util__WEBPACK_IMPORTED_MODULE_5___default.a.dist(this.pos, otherObject.pos);
     return centerDist < (this.radius + this.shieldHealth * Player.SHIELD_RADIUS + 
       otherObject.radius);
   }
 
   shineLight() {
-    for(let i = 0; i < _light__WEBPACK_IMPORTED_MODULE_3__["default"].DIRECTIONS.length; i++) {
-      let relVel = _light__WEBPACK_IMPORTED_MODULE_3__["default"].DIRECTIONS[i].slice();
-      relVel[0] *= _light__WEBPACK_IMPORTED_MODULE_3__["default"].SPEED;
-      relVel[1] *= _light__WEBPACK_IMPORTED_MODULE_3__["default"].SPEED;
+    for(let i = 0; i < _light__WEBPACK_IMPORTED_MODULE_4__["default"].DIRECTIONS.length; i++) {
+      let relVel = _light__WEBPACK_IMPORTED_MODULE_4__["default"].DIRECTIONS[i].slice();
+      relVel[0] *= _light__WEBPACK_IMPORTED_MODULE_4__["default"].SPEED;
+      relVel[1] *= _light__WEBPACK_IMPORTED_MODULE_4__["default"].SPEED;
 
-      let light = new _light__WEBPACK_IMPORTED_MODULE_3__["default"]({
+      let light = new _light__WEBPACK_IMPORTED_MODULE_4__["default"]({
         pos: this.pos,
         vel: relVel,
         game: this.game
@@ -1245,8 +1248,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   mouseMove(e) {
-    this.cursorPostion[0] = e.clientX + (-_game__WEBPACK_IMPORTED_MODULE_5__["default"].VIEW_X/2 + this.pos[0]);
-    this.cursorPostion[1] = e.clientY + (-_game__WEBPACK_IMPORTED_MODULE_5__["default"].VIEW_Y/2 + this.pos[1]);
+    this.cursorPostion[0] = e.clientX + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X/2 + this.pos[0]);
+    this.cursorPostion[1] = e.clientY + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_Y/2 + this.pos[1]);
   }
 
   updateCursorPostion() {
@@ -1297,6 +1300,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     switch(options.dir) {
@@ -1320,13 +1324,17 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     super(options);
     this.active = true;
-    this.color = options.color || "#00FF00";
+    // this.color = options.color || "#00FF00";
+    this.color = options.color || Portal.BLUE;
+
     this.connectedTo = null;
 
     this.pos = options.pos;
     this.dir = options.dir;
 
+    this.sprite = new Image();
     this.frameCount = 0;
+    this.i = 0;
   }
 
   teleport(object, pos) {
@@ -1431,74 +1439,44 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   draw(ctx) {
-    const port = new Image();
 
-    if (this.frameCount > 10) {
+    if (this.frameCount > 23) {
       this.frameCount = 0;
     }
 
-    if(this.frameCount === 0) {
-      port.src = " lib/__blue_portal_effect_large_000.png";
-    }
-    else if (this.frameCount === 1) {
-      port.src = " lib/__blue_portal_effect_large_001.png";
-    }
-    else if (this.frameCount === 2) {
-      port.src = " lib/__blue_portal_effect_large_002.png";
-    }
-    else if (this.frameCount === 3) {
-      port.src = " lib/__blue_portal_effect_large_003.png";
-    }
-    else if (this.frameCount === 4) {
-      port.src = " lib/__blue_portal_effect_large_004.png";
-    }
-    else if (this.frameCount === 5) {
-      port.src = " lib/__blue_portal_effect_large_005.png";
-    }
-    else if (this.frameCount === 6) {
-      port.src = " lib/__blue_portal_effect_large_006.png";
-    }
-    else if (this.frameCount === 7) {
-      port.src = " lib/__blue_portal_effect_large_007.png";
-    }
-    else if (this.frameCount === 8) {
-      port.src = " lib/__blue_portal_effect_large_008.png";
-    }
-    else if (this.frameCount === 9) {
-      port.src = " lib/__blue_portal_effect_large_009.png";
-    }
-    else if (this.frameCount === 10) {
-      port.src = " lib/__blue_portal_effect_large_010.png";
-    }
-
-
+    this.sprite.src = this.color[this.frameCount];
+ 
     if(this.dir === "up") {
-      ctx.drawImage(port, 
+      ctx.drawImage(this.sprite, 
         0,0, 846, 841,
         this.pos[0] - 50, this.pos[1] - 15,
-        100, 25
+        100, 40
       )
     } else if(this.dir === "down") {
-      ctx.drawImage(port, 
+      ctx.drawImage(this.sprite, 
         0,0, 846, 841,
         this.pos[0] - 50, this.pos[1] - 10,
-        100, 25
+        100, 40
       )
     } else if(this.dir === "left") {
-      ctx.drawImage(port, 
+      ctx.drawImage(this.sprite, 
         0,0, 846, 841,
         this.pos[0] - 10, this.pos[1] - 50,
-        25, 100
+        40, 100
       )
     } else if(this.dir === "right") {
-      ctx.drawImage(port, 
+      ctx.drawImage(this.sprite, 
         0,0, 846, 841,
         this.pos[0] - 10, this.pos[1] - 50,
-        25, 100
+        40, 100
       )
     }
 
-    this.frameCount++;
+    if(this.i % 8 === 0) {
+      this.frameCount++;
+    }
+
+    this.i++;
   }
 
   connect(otherPortal) {
@@ -1508,7 +1486,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   toggleActive() {
     let temp = this.connectedTo.color;
     this.connectedTo.active = false;
-    this.connectedTo.color = "#ff0000";
+    this.connectedTo.color = pink;
     setTimeout(() => {
       this.connectedTo.active = true;
       this.connectedTo.color = temp;
@@ -1520,6 +1498,60 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 Portal.OFFSET = 15;
 Portal.WIDTH = 25;
 Portal.HEIGHT = 5;
+
+Portal.BLUE = [
+  "./sprites/blue_portal/__blue_portal_effect_large_000.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_001.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_002.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_003.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_004.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_005.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_006.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_007.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_008.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_009.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_010.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_011.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_012.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_013.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_014.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_015.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_016.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_017.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_018.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_019.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_020.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_021.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_022.png",
+  "./sprites/blue_portal/__blue_portal_effect_large_023.png"
+];
+
+Portal.PINK = [
+  "./sprites/pink_portal/__pink_portal_effect_large_000.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_001.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_002.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_003.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_004.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_005.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_006.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_007.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_008.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_009.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_010.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_011.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_012.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_013.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_014.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_015.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_016.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_017.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_018.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_019.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_020.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_021.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_022.png",
+  "./sprites/pink_portal/__pink_portal_effect_large_023.png"
+];
 
 /* harmony default export */ __webpack_exports__["default"] = (Portal);
 
@@ -1537,6 +1569,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _bullet__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./bullet */ "./lib/bullet.js");
 /* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
 
 
 
@@ -1565,9 +1598,10 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
     let portal;
     let color;
     if(this.player.portals.length === 0 || this.player.portals.length === 2) 
-      color = "#ffa500";
+      color = _portal__WEBPACK_IMPORTED_MODULE_1__["default"].PINK;
     else 
-      color = "#99ccff";
+      color = _portal__WEBPACK_IMPORTED_MODULE_1__["default"].BLUE;
+
 
     if(collisionX && offsetY < 0) {
       this.remove();
@@ -1693,7 +1727,7 @@ class StaticObject {
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#ffffff";
+    this.color =  options.color || "#000000";
     this.game = options.game;
   }
 
