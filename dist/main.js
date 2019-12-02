@@ -1325,6 +1325,8 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.pos = options.pos;
     this.dir = options.dir;
+
+    this.frameCount = 0;
   }
 
   teleport(object, pos) {
@@ -1426,6 +1428,77 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       }
     }
 
+  }
+
+  draw(ctx) {
+    const port = new Image();
+
+    if (this.frameCount > 10) {
+      this.frameCount = 0;
+    }
+
+    if(this.frameCount === 0) {
+      port.src = " lib/__blue_portal_effect_large_000.png";
+    }
+    else if (this.frameCount === 1) {
+      port.src = " lib/__blue_portal_effect_large_001.png";
+    }
+    else if (this.frameCount === 2) {
+      port.src = " lib/__blue_portal_effect_large_002.png";
+    }
+    else if (this.frameCount === 3) {
+      port.src = " lib/__blue_portal_effect_large_003.png";
+    }
+    else if (this.frameCount === 4) {
+      port.src = " lib/__blue_portal_effect_large_004.png";
+    }
+    else if (this.frameCount === 5) {
+      port.src = " lib/__blue_portal_effect_large_005.png";
+    }
+    else if (this.frameCount === 6) {
+      port.src = " lib/__blue_portal_effect_large_006.png";
+    }
+    else if (this.frameCount === 7) {
+      port.src = " lib/__blue_portal_effect_large_007.png";
+    }
+    else if (this.frameCount === 8) {
+      port.src = " lib/__blue_portal_effect_large_008.png";
+    }
+    else if (this.frameCount === 9) {
+      port.src = " lib/__blue_portal_effect_large_009.png";
+    }
+    else if (this.frameCount === 10) {
+      port.src = " lib/__blue_portal_effect_large_010.png";
+    }
+
+
+    if(this.dir === "up") {
+      ctx.drawImage(port, 
+        0,0, 846, 841,
+        this.pos[0] - 50, this.pos[1] - 15,
+        100, 25
+      )
+    } else if(this.dir === "down") {
+      ctx.drawImage(port, 
+        0,0, 846, 841,
+        this.pos[0] - 50, this.pos[1] - 10,
+        100, 25
+      )
+    } else if(this.dir === "left") {
+      ctx.drawImage(port, 
+        0,0, 846, 841,
+        this.pos[0] - 10, this.pos[1] - 50,
+        25, 100
+      )
+    } else if(this.dir === "right") {
+      ctx.drawImage(port, 
+        0,0, 846, 841,
+        this.pos[0] - 10, this.pos[1] - 50,
+        25, 100
+      )
+    }
+
+    this.frameCount++;
   }
 
   connect(otherPortal) {
