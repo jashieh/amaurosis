@@ -165,6 +165,90 @@ Bullet.LIFESPAN = 5;
 
 /***/ }),
 
+/***/ "./lib/camera.js":
+/*!***********************!*\
+  !*** ./lib/camera.js ***!
+  \***********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _rectangle__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rectangle */ "./lib/rectangle.js");
+
+
+class Camera {
+  constructor(xView, yView, viewportWidth, 
+    viewportHeight, worldWidth, worldHeight) {
+    
+    this.xView = xView || 0;
+	  this.yView = yView || 0;
+
+	  this.xDeadZone = 0; 
+	  this.yDeadZone = 0; 
+
+	  this.wView = viewportWidth;
+	  this.hView = viewportHeight;
+
+	  this.axis = AXIS.BOTH;
+
+    this.followed = null;
+    this.viewportRect = new _rectangle__WEBPACK_IMPORTED_MODULE_0__["default"](this.xView, this.yView, 
+      this.wView, this.hView);
+    this.worldRect = new _rectangle__WEBPACK_IMPORTED_MODULE_0__["default"](0, 0, worldWidth, worldHeight);
+  }
+
+  follow(gameObject, xDeadZone, yDeadZone) {
+    this.followed = gameObject;
+    this.xDeadZone = xDeadZone;
+    this.yDeadZone = yDeadZone;
+  }
+
+  update() {
+    if (this.followed != null) {
+      if (this.axis == AXIS.HORIZONTAL || this.axis == AXIS.BOTH) {
+        if (this.followed.pos[0] - this.xView + this.xDeadZone > this.wView)
+          this.xView = this.followed.pos[0] - (this.wView - this.xDeadZone);
+        else if (this.followed.pos[0] - this.xDeadZone < this.xView)
+          this.xView = this.followed.pos[0] - this.xDeadZone;
+
+      }
+      if (this.axis == AXIS.VERTICAL || this.axis == AXIS.BOTH) {
+        if (this.followed.pos[1] - this.yView + this.yDeadZone > this.hView)
+          this.yView = this.followed.pos[1] - (this.hView - this.yDeadZone);
+        else if (this.followed.pos[1] - this.yDeadZone < this.yView)
+          this.yView = this.followed.pos[1] - this.yDeadZone;
+      }
+
+    }
+
+    this.viewportRect.set(this.xView, this.yView);
+
+    if (!this.viewportRect.within(this.worldRect)) {
+      if (this.viewportRect.left < this.worldRect.left)
+        this.xView = this.worldRect.left;
+      if (this.viewportRect.top < this.worldRect.top)
+        this.yView = this.worldRect.top;
+      if (this.viewportRect.right > this.worldRect.right)
+        this.xView = this.worldRect.right - this.wView;
+      if (this.viewportRect.bottom > this.worldRect.bottom)
+        this.yView = this.worldRect.bottom - this.hView;
+    }
+  }
+
+}
+
+const AXIS = {
+  NONE: 1,
+  HORIZONTAL: 2,
+  VERTICAL: 3,
+  BOTH: 4 
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (Camera);
+
+/***/ }),
+
 /***/ "./lib/game.js":
 /*!*********************!*\
   !*** ./lib/game.js ***!
@@ -195,7 +279,7 @@ class Game {
     this.walls = [];
     this.portals = [];
 
-    this.addWall();
+    // this.addWall();
   }
   
 
@@ -313,7 +397,7 @@ class Game {
     return [].concat(this.players, this.bullets, this.walls, this.portals, this.lights);
   }
 
-  draw(ctx) {
+  draw(ctx, xView, yView) {
     if(this.players[0].portals.length === 2) {
       this.players[0].connectPortals();
     } else if(this.players[0].portals.length > 2) {
@@ -321,14 +405,26 @@ class Game {
     }
 
     // this.checkBounce();
+
+    let sx, sy, dx, dy;
+	  let sWidth, sHeight, dWidth, dHeight;
+
+	  // offset point to crop the image
+	  sx = xView;
+	  sy = yView;
     
     this.wallCollision(this.players[0].pos);
-    ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    // ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
+
+    ctx.clearRect(0, 0, xView, yView);
+
     ctx.fillStyle = Game.BG_COLOR;
-    ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    
+    // ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    ctx.fillRect(0, 0, xView, yView);
     
     this.allObjects().forEach(object => {
-      object.draw(ctx);
+      object.draw(ctx, xView, yView);
     });
 
     if(this.players[0].shielding) {
@@ -474,8 +570,10 @@ class Game {
 }
 
 Game.BG_COLOR = "#000000";
-Game.DIM_X = 1000;
-Game.DIM_Y = 600;
+// Game.DIM_X = 1000;
+// Game.DIM_Y = 600;
+Game.DIM_X = 5000;
+Game.DIM_Y = 5000;
 Game.FPS = 32;
 
 /* harmony default export */ __webpack_exports__["default"] = (Game);
@@ -492,6 +590,10 @@ Game.FPS = 32;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./player */ "./lib/player.js");
+/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./camera */ "./lib/camera.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
+
 
 
 class GameView {
@@ -499,6 +601,12 @@ class GameView {
     this.ctx = ctx;
     this.game = game;
     this.player = this.game.addPlayer();
+
+    const vWidth = 1000;
+    const vHeight = 600;
+    this.camera = new _camera__WEBPACK_IMPORTED_MODULE_1__["default"](0, 0, vWidth, vHeight, 5000, 5000);
+
+    this.camera.follow(this.player, vWidth / 2, vHeight / 2);
 
     this.keyUp = this.keyUp.bind(this);
   }
@@ -568,13 +676,12 @@ class GameView {
 
     if(keys[32]) {
       this.player.shielding = true;
-
-      if(this.player.shieldHealth > _player__WEBPACK_IMPORTED_MODULE_0__["default"].MINSHIELD) {
+      if(this.player.shieldHealth > _player__WEBPACK_IMPORTED_MODULE_0__["default"].MIN_SHIELD) {
         this.player.shieldHealth -= 0.02;
       }
     } else {
       this.player.shielding = false;
-      if(this.player.shieldHealth < _player__WEBPACK_IMPORTED_MODULE_0__["default"].MAXSHIELD) {
+      if(this.player.shieldHealth < _player__WEBPACK_IMPORTED_MODULE_0__["default"].MAX_SHIELD) {
         this.player.shieldHealth += 0.01;
       }
     }
@@ -591,6 +698,7 @@ class GameView {
   start() {
     this.bindKeyHandlers();
     this.lastTime = 0;
+
     // start the animation
     requestAnimationFrame(this.animate.bind(this));
   }
@@ -599,7 +707,10 @@ class GameView {
     const timeDelta = time - this.lastTime;
     this.keyPressed();
     this.game.step(timeDelta);
-    this.game.draw(this.ctx);
+
+    this.camera.update();
+    
+    this.game.draw(this.ctx, 1000, 600);
     this.lastTime = time;
 
     // every call to animate requests causes another call to animate
@@ -634,8 +745,11 @@ __webpack_require__.r(__webpack_exports__);
 
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("game-canvas");
-  canvasEl.width = _game__WEBPACK_IMPORTED_MODULE_0__["default"].DIM_X;
-  canvasEl.height = _game__WEBPACK_IMPORTED_MODULE_0__["default"].DIM_Y;
+  // canvasEl.width = Game.DIM_X;
+  // canvasEl.height = Game.DIM_Y;
+
+  canvasEl.width = 1000;
+  canvasEl.height = 600;
   const ctx = canvasEl.getContext("2d");
 
   window.canvas = canvasEl;
@@ -672,11 +786,13 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     options.radius = 1;
     super(options);
-    this.bounceCount = 0;
+    // this.bounceCount = 0;
     this.color = "#ffffff";
     this.trail = [this.pos];
 
     this.maxLength = Light.MAX;
+    this.i = 0;
+    this.lifespan = options.lifespan || Math.random(100);
   }
 
   drawTail() {
@@ -685,8 +801,18 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   
   draw(ctx) {
     if(this.trail.length === 0) return;
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = this.color;
+
+    const gradient = ctx.createLinearGradient(
+      this.pos[0], this.pos[1],
+      this.trail[0][0], this.trail[0][1]
+    );
+
+    gradient.addColorStop(0, "#fff");
+    gradient.addColorStop(1,  "#222");
+
+    
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = gradient;
     ctx.setLineDash([1, 0]);
     
     ctx.beginPath();
@@ -710,20 +836,22 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.vel[0] *= -1;
       this.vel[1] *= -1;
     }
+    
+    // if(this.bounceCount > Light.LIFESPAN) {
+    //   this.remove();
+    // }
+    // this.bounceCount++;
 
     const reflection = new Light({
       pos: this.pos,
       vel: this.vel,
-      game: this.game
+      game: this.game,
+      lifespan: this.lifespan
     });
 
     this.game.add(reflection);
     this.vel = [0, 0];
 
-    if(this.bounceCount > Light.LIFESPAN) {
-      this.remove();
-    }
-    this.bounceCount++;
   }
 
   move(timeDelta) {
@@ -748,21 +876,31 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     if(collisionX) {
       this.bounce("horizontal");
     } else if (collisionY) {
-
       this.bounce("vertical");
     } else if (collisionXY) {
       this.bounce("both");
     }
 
-    
+    this.lifespan++;
+
+    if(this.lifespan > Light.LIFESPAN) {
+      this.remove();
+    }
+
     this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
     this.pos[1] + (this.vel[1] * velocityScale)];
     
     this.trail.push(this.pos);
 
     if(this.trail.length > Light.MAX) {
-      this.trail.shift();
+        this.trail.shift();
     }
+
+    if(this.lifespan > Light.HALF_LIFE) {
+      this.trail.shift();
+      this.trail.shift();
+
+    }  
   }
 }
 
@@ -773,7 +911,8 @@ const cos30 = Math.sqrt(3)/2;
 const sin30 = 1/2;
 
 
-Light.LIFESPAN = 5;
+Light.LIFESPAN = 100;
+Light.HALF_LIFE = 70;
 Light.SPEED = 5;
 Light.MAX = 40;
 
@@ -1031,7 +1170,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           this.portalCooldown = false;
         }, 5000);
       }
-      
+
     }
 
   }
@@ -1058,7 +1197,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   
       ctx.beginPath();
       ctx.arc(
-        this.pos[0], this.pos[1], this.radius + this.shieldHealth * 5, 
+        this.pos[0], this.pos[1], this.radius + this.shieldHealth * Player.SHIELD_RADIUS, 
         0, 2 * Math.PI, true
       );
   
@@ -1068,7 +1207,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
   checkShieldHit(otherObject) {
     const centerDist = _util__WEBPACK_IMPORTED_MODULE_4___default.a.dist(this.pos, otherObject.pos);
-    return centerDist < (this.radius + this.shieldHealth * 5 + otherObject.radius);
+    return centerDist < (this.radius + this.shieldHealth * Player.SHIELD_RADIUS + 
+      otherObject.radius);
   }
 
   shineLight() {
@@ -1091,14 +1231,26 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     }, 1000);
   }
 
-
-
-
   updateCursorPostion() {
     window.addEventListener('mousemove', (e) => {
       this.cursorPostion[0] = e.clientX;
       this.cursorPostion[1] = e.clientY;
     });
+  }
+
+
+  draw(ctx, xView, yView) {
+    
+    // ctx.save();
+    ctx.fillStyle = this.color;
+
+    ctx.beginPath();
+    console.log(xView, yView)
+    ctx.arc(
+      this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, true
+    );
+    ctx.fill();
+    // ctx.restore();
   }
 
 }
@@ -1107,8 +1259,9 @@ const sideMove = Math.sqrt(2)/2;
 
 Player.MAX_BULLETS = 12;
 Player.MAX_HEALTH = 3;
-Player.MINSHIELD = 0;
+Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 3;
+Player.SHIELD_RADIUS = 4;
 
 Player.SPEED = 3;
 Player.MOVES = {
@@ -1406,6 +1559,48 @@ PortalGun.OFFSET = 5;
 
 /***/ }),
 
+/***/ "./lib/rectangle.js":
+/*!**************************!*\
+  !*** ./lib/rectangle.js ***!
+  \**************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+class Rectangle {
+ constructor(left, top, width, height) {
+  this.left = left || 0;
+  this.top = top || 0;
+  this.width = width || 0;
+  this.height = height || 0;
+  this.right = this.left + this.width;
+  this.bottom = this.top + this.height;
+ }
+
+ set(left, top, width, height) {
+  this.left = left;
+  this.top = top;
+  this.width = width || this.width;
+  this.height = height || this.height
+  this.right = (this.left + this.width);
+  this.bottom = (this.top + this.height); 
+ }
+
+ within(rect) {
+  return (rect.left <= this.left &&
+    rect.right >= this.right &&
+    rect.top <= this.top &&
+    rect.bottom >= this.bottom);
+ }
+
+
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (Rectangle);
+
+/***/ }),
+
 /***/ "./lib/static_object.js":
 /*!******************************!*\
   !*** ./lib/static_object.js ***!
@@ -1426,7 +1621,7 @@ class StaticObject {
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#808080";
+    this.color =  options.color || "#000000";
     this.game = options.game;
   }
 
