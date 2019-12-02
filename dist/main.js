@@ -392,7 +392,7 @@ class Game {
   }
 
   allMovingObjects() {
-    return [].concat(this.players, this.bullets);
+    return [].concat(this.players, this.bullets, this.lights);
   }
 
   allObjects() {
@@ -448,17 +448,19 @@ class Game {
 
   moveObjects(delta) {
     this.allMovingObjects().forEach(object => {
-      if(!(object instanceof _wall__WEBPACK_IMPORTED_MODULE_2__["default"] || object instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"]))
+      if(!(object instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"]))
         object.move(delta);
     });
 
-    this.lights.forEach(object => {
-      object.move(delta);
-    });
+    // this.lights.forEach(object => {
+    //   object.move(delta);
+    // });
   }
 
   step(delta) {
-    this.moveObjects(delta);
+    if(!this.players[0].timeStop) {
+      this.moveObjects(delta);
+    }
     this.checkCollissions();
   }
 
@@ -650,6 +652,12 @@ class GameView {
         this.player.fireBullet("portal"); 
     });
 
+
+    key("r", () => { 
+      if(!this.player.timeStopCooldown)
+        this.player.stopTime(); 
+    });
+
     key("f", () => { 
       if(!this.player.lightCooldown) {
         this.player.shineLight(); 
@@ -657,14 +665,6 @@ class GameView {
     });
 
 
-    // Object.keys(GameView.MOVES).forEach((k) => {
-    //   const move = GameView.MOVES[k];
-
-    //   key(k, () => { this.player.power(move); });
-
-
-    //   document.addEventListener("keyup", this.keyUp);
-    // });
   }
 
   // w = 87; d = 68; a = 65; s = 83; q = 81; e = 69; space = 32
@@ -743,8 +743,8 @@ class GameView {
   }
 }
 
-const accel = 3;
-const sideMove = Math.sqrt(accel+accel)/2;
+// const accel = 3;
+// const sideMove = Math.sqrt(accel+accel)/2;
 
 const keys = {};
 
@@ -1059,7 +1059,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const maxSpeed = 3;
-const radius = 8;
+const radius = 25;
 
 class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
@@ -1075,6 +1075,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.portalBullets = 0;
     this.lightCooldown = false;
     this.portalCooldown = false;
+
+    this.timeStop = false;
+    this.timeStopCooldown = false;
+
     this.shielding = false;
     this.shieldHealth = Player.MAX_SHIELD;
     this.updateCursorPostion();
@@ -1224,7 +1228,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.portals[1].remove();
     this.portals.shift();
     this.portals.shift();
-
   }
 
   drawShield(ctx) {
@@ -1263,10 +1266,24 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
       this.game.add(light);
     }
+
     this.lightCooldown = true;
     setTimeout(() => {
       this.lightCooldown = false;
     }, 1000);
+  }
+
+  stopTime() {
+    this.timeStop = true;
+    this.timeStopCooldown = true;
+
+    setTimeout(() => {
+      this.timeStop = false;
+    }, 1000);
+
+    setTimeout(() => {
+      this.timeStopCooldown = false;
+    }, 5000);
   }
 
   mouseMove(e) {
@@ -1315,8 +1332,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       sx = 0;
     }
 
-
-
     // ctx.rotate(this.mouseAngle());
 
     // ctx.drawImage(this.sprite, 
@@ -1333,17 +1348,17 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     ctx.restore();
 
-    // ctx.lineWidth = 2;
-    //   ctx.strokeStyle = "#144b9f";
-    //   ctx.setLineDash([5, 1]);
-  
-    //   ctx.beginPath();
-    //   ctx.arc(
-    //     this.pos[0], this.pos[1], this.radius + this.shieldHealth * Player.SHIELD_RADIUS, 
-    //     0, 2 * Math.PI, true
-    //   );
-  
-    //   ctx.stroke();
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.setLineDash([1,0]);
+    ctx.beginPath();
+    ctx.arc(
+      this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, true
+    );
+
+    ctx.stroke();
+
     if(this.i % 8 === 0) {
       this.frame++;
     }
@@ -1553,19 +1568,19 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     } else if(this.dir === "down") {
       ctx.drawImage(this.sprite, 
         0,0, 846, 841,
-        this.pos[0] - 50, this.pos[1] - 10,
+        this.pos[0] - 50, this.pos[1] - 20,
         100, 40
       )
     } else if(this.dir === "left") {
       ctx.drawImage(this.sprite, 
         0,0, 846, 841,
-        this.pos[0] - 10, this.pos[1] - 50,
+        this.pos[0] - 20, this.pos[1] - 50,
         40, 100
       )
     } else if(this.dir === "right") {
       ctx.drawImage(this.sprite, 
         0,0, 846, 841,
-        this.pos[0] - 10, this.pos[1] - 50,
+        this.pos[0] - 20, this.pos[1] - 50,
         40, 100
       )
     }
@@ -1817,10 +1832,6 @@ __webpack_require__.r(__webpack_exports__);
 class StaticObject {
 
   constructor(options) {
-    // this.startPos = options.startPos;
-    // this.endPos = options.endPos;
-    // this.length = options.length;
-
     this.topLeft = options.topLeft;
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
@@ -1830,7 +1841,7 @@ class StaticObject {
   }
 
   draw(ctx) {
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = "rgba(20, 20, 20, 0.5)";
     ctx.fillRect(this.topLeft[0], this.topLeft[1], this.width, this.height);
   }
 
