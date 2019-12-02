@@ -396,12 +396,16 @@ class Game {
   }
 
   allObjects() {
-    return [].concat(this.players, this.bullets, this.walls, this.portals, this.lights);
+    return [].concat(this.bullets, this.walls, this.portals, this.lights);
   }
 
   draw(ctx, xView, yView) {
     ctx.save();
-    if(this.players[0].portals.length === 2) {
+
+
+    if(this.players[0].portals.length === 2
+      && !this.players[0].portals[0].connectedTo
+      && !this.players[0].portals[1].connectedTo) {
       this.players[0].connectPortals();
     } else if(this.players[0].portals.length > 2) {
       this.players[0].removePortals();
@@ -412,7 +416,7 @@ class Game {
     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
     
     ctx.fillRect(0, 0, xView, yView);
-    // console.log(this.p)
+
     ctx.translate((xView/2 - this.players[0].pos[0]), (yView/2 - this.players[0].pos[1]))
     // ctx.clearRect(0, 0, xView, yView);
 
@@ -427,12 +431,16 @@ class Game {
     this.players[0].renderMouse(ctx);
 
     this.allObjects().forEach(object => {
-      object.draw(ctx, xView, yView);
+      object.draw(ctx);
     });
+
+    this.players[0].draw(ctx);
 
     if(this.players[0].shielding) {
       this.players[0].drawShield(ctx);
     }
+
+    // ctx.rotate(-0.7)
     
     ctx.restore();
 
@@ -662,23 +670,32 @@ class GameView {
   // w = 87; d = 68; a = 65; s = 83; q = 81; e = 69; space = 32
   keyPressed() {
     // console.log(keys);
+    this.player.moving = false;
     if(this.player.shieldHealth < 0.01 || !this.player.shielding) {
       if (keys[87] && keys[65]) {
         this.player.move("wa");
+        this.player.moving = true;
       } else if (keys[87] && keys[68]) {
         this.player.move("wd");
+        this.player.moving = true;
       } else if (keys[83] && keys[65]) {
         this.player.move("sa");
+        this.player.moving = true;
       } else if (keys[83] && keys[68]) {
         this.player.move("sd");
+        this.player.moving = true;
       } else if(keys[87]) {
         this.player.move("w");
+        this.player.moving = true;
       } else if (keys[65]) {
         this.player.move("a");
+        this.player.moving = true;
       } else if (keys[83]) {
         this.player.move("s");
+        this.player.moving = true;
       } else if (keys[68]) {
         this.player.move("d");
+        this.player.moving = true;
       } 
     }
 
@@ -730,6 +747,8 @@ const accel = 3;
 const sideMove = Math.sqrt(accel+accel)/2;
 
 const keys = {};
+
+window.keys = keys;
 
 
 /* harmony default export */ __webpack_exports__["default"] = (GameView);
@@ -1060,6 +1079,12 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.shieldHealth = Player.MAX_SHIELD;
     this.updateCursorPostion();
     this.cursorPostion = [0,0];
+
+    this.sprite = new Image();
+
+    this.moving = false;
+    this.frame = 0;
+    this.i = 0;
   }
 
   power(delta) {
@@ -1084,10 +1109,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const botLeft = [newX - radX, newY + radY];
     const topRight = [newX + radX, newY - radY];
     const botRight = [newX + radX, newY + radY];
-
-    if(this.portals.length === 2) {
-      this.connectPortals();
-    }
 
     if(this.game.portalCollision(topLeft))
       return this.game.portalCollision(topLeft).teleport(this, topLeft);
@@ -1193,6 +1214,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   connectPortals() {
     this.portals[0].connect(this.portals[1]);
     this.portals[1].connect(this.portals[0]);
+
     this.portals[0].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
     this.portals[1].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
   }
@@ -1255,6 +1277,78 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   updateCursorPostion() {
     window.addEventListener('mousemove', e => this.mouseMove(e));
   }
+
+
+  draw(ctx) {
+    // this.sprite = new Image();
+
+    if (this.frame > 2) {
+      this.frame = 0;
+    }
+
+    this.sprite.src = "./sprites/player/cat.png";
+    ctx.save();
+
+    ctx.translate(this.pos[0], this.pos[1])
+
+    let angle = this.mouseAngle()*180/Math.PI;
+    let sx, sy;
+
+    if(angle > -45 && angle < 45) {
+      sx = this.frame*48;
+      sy = 2*48;
+    }
+    else if(angle > 45 && angle < 135) {
+      sx = this.frame*48;
+      sy = 0;
+    }
+    else if(angle > 135 || angle < -135) {
+      sx = this.frame*48;
+      sy = 48;
+    }
+    else if(angle > -135 && angle < -45) {
+      sx = this.frame*48;
+      sy = 3*48;
+    }
+
+    if(!this.moving) {
+      sx = 0;
+    }
+
+
+
+    // ctx.rotate(this.mouseAngle());
+
+    // ctx.drawImage(this.sprite, 
+    //   0,0, 50, 50,
+    //   (this.pos[0]-20), (this.pos[1]-25),
+    //   50, 50
+    // );
+
+    ctx.drawImage(this.sprite, 
+      sx,sy, 48, 48,
+      -22, -27,
+      48, 48
+    );
+
+    ctx.restore();
+
+    // ctx.lineWidth = 2;
+    //   ctx.strokeStyle = "#144b9f";
+    //   ctx.setLineDash([5, 1]);
+  
+    //   ctx.beginPath();
+    //   ctx.arc(
+    //     this.pos[0], this.pos[1], this.radius + this.shieldHealth * Player.SHIELD_RADIUS, 
+    //     0, 2 * Math.PI, true
+    //   );
+  
+    //   ctx.stroke();
+    if(this.i % 8 === 0) {
+      this.frame++;
+    }
+    this.i++;
+  }
 }
 
 const sideMove = Math.sqrt(2)/2;
@@ -1264,6 +1358,10 @@ Player.MAX_HEALTH = 3;
 Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 3;
 Player.SHIELD_RADIUS = 4;
+
+Player.WIDTH = 48;
+Player.HEIGHT = 48;
+
 
 Player.SPEED = 3;
 Player.MOVES = {
@@ -1486,7 +1584,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   toggleActive() {
     let temp = this.connectedTo.color;
     this.connectedTo.active = false;
-    this.connectedTo.color = pink;
+    this.connectedTo.color = Portal.PINK;
     setTimeout(() => {
       this.connectedTo.active = true;
       this.connectedTo.color = temp;
