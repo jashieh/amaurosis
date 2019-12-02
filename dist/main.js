@@ -411,7 +411,10 @@ class Game {
 
 	  // offset point to crop the image
 	  sx = xView;
-	  sy = yView;
+    sy = yView;
+    
+    sWidth = ctx.canvas.width;
+    sHeight = ctx.canvas.height;
     
     this.wallCollision(this.players[0].pos);
     // ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
