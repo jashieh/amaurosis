@@ -423,7 +423,9 @@ class Game {
     // ctx.translate(-this.players[0].pos[0],-this.players[0].pos[1])
     // ctx.restore();
 
+    
     this.players[0].renderMouse(ctx);
+    
     this.allObjects().forEach(object => {
       object.draw(ctx, xView, yView);
     });
@@ -1094,8 +1096,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     else if(this.game.portalCollision(botRight))
       return this.game.portalCollision(botRight).teleport(this, botRight);
 
-    
-
+  
     if(this.game.wallCollision(topLeft)
       || this.game.wallCollision(botLeft)
       || this.game.wallCollision(topRight)
@@ -1103,7 +1104,11 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       return;
     }
 
+    this.cursorPostion[0] += newX - this.pos[0];
+    this.cursorPostion[1] += newY - this.pos[1];
+
     this.pos = [newX, newY];
+
   }
 
   mouseAngle() {
@@ -1111,7 +1116,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion[1] - this.pos[1]]);
     let x = vect[0];
     let y = vect[1];
-    console.log("x")
 
     return Math.atan2(y,x);
   }
@@ -1133,8 +1137,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
 
-    const radX = Math.cos(angle)*this.radius;
-    const radY = Math.sin(angle)*this.radius;
+    const radX = Math.cos(angle)*this.radius*1.2;
+    const radY = Math.sin(angle)*this.radius*1.2;
     pos[0] += radX;
     pos[1] += radY;
 
@@ -1258,7 +1262,7 @@ Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 3;
 Player.SHIELD_RADIUS = 4;
 
-Player.SPEED = 5;
+Player.SPEED = 3;
 Player.MOVES = {
   w: [0, -1],
   a: [-1, 0],
