@@ -264,6 +264,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
 /* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
 /* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./light */ "./lib/light.js");
+/* harmony import */ var _game_view__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./game_view */ "./lib/game_view.js");
+
 
 
 
@@ -279,7 +281,7 @@ class Game {
     this.walls = [];
     this.portals = [];
 
-    // this.addWall();
+    this.addWall();
   }
   
 
@@ -362,10 +364,10 @@ class Game {
 
     this.add(wall);
     this.add(wall2);
-    this.add(wall3);
-    this.add(wall4);
-    this.add(wall5);
-    this.add(wall6);
+    // this.add(wall3);
+    // this.add(wall4);
+    // this.add(wall5);
+    // this.add(wall6);
 
     let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
       pos: [275, 300],
@@ -398,34 +400,30 @@ class Game {
   }
 
   draw(ctx, xView, yView) {
+    ctx.save();
     if(this.players[0].portals.length === 2) {
       this.players[0].connectPortals();
     } else if(this.players[0].portals.length > 2) {
       this.players[0].removePortals();
     }
-
-    // this.checkBounce();
-
-    let sx, sy, dx, dy;
-	  let sWidth, sHeight, dWidth, dHeight;
-
-	  // offset point to crop the image
-	  sx = xView;
-    sy = yView;
-    
-    sWidth = ctx.canvas.width;
-    sHeight = ctx.canvas.height;
-    
+        
+  
     this.wallCollision(this.players[0].pos);
-    // ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
-
-    ctx.clearRect(0, 0, xView, yView);
+    ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    
+    ctx.fillRect(0, 0, xView, yView);
+    // console.log(this.p)
+    ctx.translate((xView/2 - this.players[0].pos[0]), (yView/2 - this.players[0].pos[1]))
+    // ctx.clearRect(0, 0, xView, yView);
 
     ctx.fillStyle = Game.BG_COLOR;
     
     // ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
-    ctx.fillRect(0, 0, xView, yView);
-    
+
+    // ctx.translate(-this.players[0].pos[0],-this.players[0].pos[1])
+    // ctx.restore();
+
+    this.players[0].renderMouse(ctx);
     this.allObjects().forEach(object => {
       object.draw(ctx, xView, yView);
     });
@@ -434,7 +432,8 @@ class Game {
       this.players[0].drawShield(ctx);
     }
     
-    this.players[0].renderMouse(ctx);
+    ctx.restore();
+
   }
 
   moveObjects(delta) {
@@ -577,6 +576,10 @@ Game.BG_COLOR = "#000000";
 // Game.DIM_Y = 600;
 Game.DIM_X = 5000;
 Game.DIM_Y = 5000;
+
+Game.VIEW_X = 1000;
+Game.VIEW_Y = 600;
+
 Game.FPS = 32;
 
 /* harmony default export */ __webpack_exports__["default"] = (Game);
@@ -607,9 +610,9 @@ class GameView {
 
     const vWidth = 1000;
     const vHeight = 600;
-    this.camera = new _camera__WEBPACK_IMPORTED_MODULE_1__["default"](0, 0, vWidth, vHeight, 5000, 5000);
+      // this.camera = new Camera(0, 0, vWidth, vHeight, 5000, 5000);
 
-    this.camera.follow(this.player, vWidth / 2, vHeight / 2);
+      // this.camera.follow(this.player, vWidth / 2, vHeight / 2);
 
     this.keyUp = this.keyUp.bind(this);
   }
@@ -711,7 +714,7 @@ class GameView {
     this.keyPressed();
     this.game.step(timeDelta);
 
-    this.camera.update();
+    // this.camera.update();
     
     this.game.draw(this.ctx, 1000, 600);
     this.lastTime = time;
@@ -751,8 +754,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // canvasEl.width = Game.DIM_X;
   // canvasEl.height = Game.DIM_Y;
 
-  canvasEl.width = 1000;
-  canvasEl.height = 600;
+  canvasEl.width = _game__WEBPACK_IMPORTED_MODULE_0__["default"].VIEW_X;
+  canvasEl.height = _game__WEBPACK_IMPORTED_MODULE_0__["default"].VIEW_Y;
   const ctx = canvasEl.getContext("2d");
 
   window.canvas = canvasEl;
@@ -1024,6 +1027,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./light */ "./lib/light.js");
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util */ "./lib/util.js");
 /* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+
 
 
 
@@ -1106,6 +1111,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion[1] - this.pos[1]]);
     let x = vect[0];
     let y = vect[1];
+    console.log("x")
 
     return Math.atan2(y,x);
   }
@@ -1234,28 +1240,14 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     }, 1000);
   }
 
+  mouseMove(e) {
+    this.cursorPostion[0] = e.clientX + (-_game__WEBPACK_IMPORTED_MODULE_5__["default"].VIEW_X/2 + this.pos[0]);
+    this.cursorPostion[1] = e.clientY + (-_game__WEBPACK_IMPORTED_MODULE_5__["default"].VIEW_Y/2 + this.pos[1]);
+  }
+
   updateCursorPostion() {
-    window.addEventListener('mousemove', (e) => {
-      this.cursorPostion[0] = e.clientX;
-      this.cursorPostion[1] = e.clientY;
-    });
+    window.addEventListener('mousemove', e => this.mouseMove(e));
   }
-
-
-  draw(ctx, xView, yView) {
-    
-    // ctx.save();
-    ctx.fillStyle = this.color;
-
-    ctx.beginPath();
-    console.log(xView, yView)
-    ctx.arc(
-      this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, true
-    );
-    ctx.fill();
-    // ctx.restore();
-  }
-
 }
 
 const sideMove = Math.sqrt(2)/2;
@@ -1266,7 +1258,7 @@ Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 3;
 Player.SHIELD_RADIUS = 4;
 
-Player.SPEED = 3;
+Player.SPEED = 5;
 Player.MOVES = {
   w: [0, -1],
   a: [-1, 0],
@@ -1624,7 +1616,7 @@ class StaticObject {
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#000000";
+    this.color =  options.color || "#ffffff";
     this.game = options.game;
   }
 
