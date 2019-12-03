@@ -138,15 +138,27 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const collisionXY = this.game.wallCollision([newX, newY]);
 
 
-    if(this.game.portalCollision([this.pos[0], newY]))
-      return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
-    else if(this.game.portalCollision([newX, this.pos[1]]))
-      return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
+    if(this.game.portalCollision([this.pos[0], newY])) {
+      if(this.game.portalCollision([this.pos[0], newY]).connectedTo) {
+        return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
+      }
+      else {
+        return this.bounce("horizontal");
+      }
+    }
+    
+    else if(this.game.portalCollision([newX, this.pos[1]])) {
+      if(this.game.portalCollision([this.pos[0], newY]).connectedTo) {
+        return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
+      }
+      else {
+        return this.bounce("vertical");
+      }
+    }
 
     if(collisionX) {
       this.bounce("horizontal");
     } else if (collisionY) {
-
       this.bounce("vertical");
     } else if (collisionXY) {
       this.bounce("both");
@@ -429,12 +441,12 @@ class Game {
     // ctx.restore();
 
     
-    this.players[0].renderMouse(ctx);
-
+    
     this.allObjects().forEach(object => {
       object.draw(ctx);
     });
-
+    this.players[0].renderMouse(ctx);
+    
     this.players[0].draw(ctx);
 
     if(this.players[0].shielding) {
@@ -821,10 +833,6 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.i = 0;
     this.lifespan = options.lifespan || Math.floor(Math.random()*40);
   }
-
-  drawTail() {
-
-  }
   
   draw(ctx) {
     if(this.trail.length === 0) return;
@@ -903,12 +911,7 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const collisionY = this.game.wallCollision([newX, this.pos[1]]);
     const collisionXY = this.game.wallCollision([newX, newY]);
 
-
-    // if(this.game.portalCollision([this.pos[0], newY]))
-    //   return this.game.portalCollision([this.pos[0], newY]).teleport(this, [this.pos[0], newY]);
-    // else if(this.game.portalCollision([newX, this.pos[1]]))
-    //   return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
-
+    
     if(collisionX) {
       this.bounce("horizontal");
     } else if (collisionY) {
@@ -929,7 +932,7 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.trail.push(this.pos);
 
     if(this.trail.length > Light.MAX) {
-        this.trail.shift();
+      this.trail.shift();
     }
 
     if(this.lifespan > Light.HALF_LIFE) {
@@ -946,7 +949,7 @@ const cos30 = Math.sqrt(3)/2;
 const sin30 = 1/2;
 
 
-Light.LIFESPAN = 400;
+Light.LIFESPAN = 250;
 Light.HALF_LIFE = Light.LIFESPAN/2;
 Light.SPEED = 5;
 Light.MAX = 40;
