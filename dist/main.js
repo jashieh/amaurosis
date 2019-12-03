@@ -338,24 +338,25 @@ class Game {
 
     let wall3 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
       topLeft: [0,0],
-      bottomRight: [1000,5],
+      bottomRight: [1000,30],
       direction: "vertical",
       game: this
     });
     let wall4 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
       topLeft: [0,0],
-      bottomRight: [5,600],
+      bottomRight: [30,600],
       direction: "vertical",
       game: this
     });
     let wall5 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [0,595],
+      topLeft: [0,570],
       bottomRight: [1000,600],
       direction: "vertical",
       game: this
     });
+
     let wall6 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [995,0],
+      topLeft: [970,0],
       bottomRight: [1000,600],
       direction: "vertical",
       game: this
@@ -364,10 +365,10 @@ class Game {
 
     this.add(wall);
     this.add(wall2);
-    // this.add(wall3);
-    // this.add(wall4);
-    // this.add(wall5);
-    // this.add(wall6);
+    this.add(wall3);
+    this.add(wall4);
+    this.add(wall5);
+    this.add(wall6);
 
     let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
       pos: [275, 300],
@@ -813,13 +814,12 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     options.radius = 1;
     super(options);
-    // this.bounceCount = 0;
     this.color = "#ffffff";
     this.trail = [this.pos];
 
     this.maxLength = Light.MAX;
     this.i = 0;
-    this.lifespan = options.lifespan || Math.random(100);
+    this.lifespan = options.lifespan || Math.floor(Math.random()*40);
   }
 
   drawTail() {
@@ -834,11 +834,20 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.trail[0][0], this.trail[0][1]
     );
 
-    gradient.addColorStop(0, "#fff");
+    if(this.lifespan > Light.HALF_LIFE) {
+      gradient.addColorStop(0, "#aaa");
+    } 
+    else if(this.lifespan > Light.HALF_LIFE * (3/2)) {
+      gradient.addColorStop(0, "#7f7f7f");
+    }
+    else {
+      gradient.addColorStop(0, "#fff");
+    }
+
     gradient.addColorStop(1,  "#222");
 
     
-    ctx.lineWidth = 1;
+    ctx.lineWidth = this.radius;
     ctx.strokeStyle = gradient;
     ctx.setLineDash([1, 0]);
     
@@ -926,7 +935,6 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     if(this.lifespan > Light.HALF_LIFE) {
       this.trail.shift();
       this.trail.shift();
-
     }  
   }
 }
@@ -938,8 +946,8 @@ const cos30 = Math.sqrt(3)/2;
 const sin30 = 1/2;
 
 
-Light.LIFESPAN = 100;
-Light.HALF_LIFE = 70;
+Light.LIFESPAN = 400;
+Light.HALF_LIFE = Light.LIFESPAN/2;
 Light.SPEED = 5;
 Light.MAX = 40;
 
@@ -1085,6 +1093,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion = [0,0];
 
     this.sprite = new Image();
+    this.sprite.src = "./sprites/player/cat.png";
+
 
     this.moving = false;
     this.frame = 0;
@@ -1163,27 +1173,27 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     let relVel = _util__WEBPACK_IMPORTED_MODULE_5___default.a.dir([(this.cursorPostion[0] - this.pos[0]), 
     this.cursorPostion[1] - this.pos[1]]);
     let pos = this.pos.slice();
-
+    
     const radX = Math.cos(angle)*this.radius*1.2;
     const radY = Math.sin(angle)*this.radius*1.2;
     pos[0] += radX;
     pos[1] += radY;
-
-
+    
+    
     relVel[0] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
     relVel[1] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
-
+    
     if(type === "bullet") {
       const bullet = new _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]({
         pos: pos,
         vel: relVel,
         game: this.game
       });
-
+      
       this.game.add(bullet);
       this.bullets--;
       console.log(`Ammo: ${this.bullets}`);
-
+      
       if(this.bullets <= 0) {
         console.log('reloading...');
         this.reloading = true;
@@ -1192,7 +1202,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           this.reloading = false;
         }, 1500);
       }
-
+      
     } else if (type === "portal") {
       const portalGun = new _portal_gun__WEBPACK_IMPORTED_MODULE_2__["default"]({
         pos: pos,
@@ -1202,7 +1212,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
       this.game.add(portalGun);
       this.portalBullets++;
-
+      
       if(this.portalBullets === 2) {
         this.portalCooldown = true;
         this.portalBullets = 0;
@@ -1210,19 +1220,19 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           this.portalCooldown = false;
         }, 5000);
       }
-
+      
     }
-
+    
   }
 
   connectPortals() {
     this.portals[0].connect(this.portals[1]);
     this.portals[1].connect(this.portals[0]);
-
+    
     this.portals[0].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
     this.portals[1].color = _portal__WEBPACK_IMPORTED_MODULE_3__["default"].BLUE;
   }
-
+  
   removePortals() {
     this.portals[0].remove();
     this.portals[1].remove();
@@ -1267,10 +1277,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.game.add(light);
     }
 
-    this.lightCooldown = true;
-    setTimeout(() => {
-      this.lightCooldown = false;
-    }, 1000);
+    // this.lightCooldown = true;
+    // setTimeout(() => {
+    //   this.lightCooldown = false;
+    // }, 1000);
   }
 
   stopTime() {
@@ -1297,13 +1307,11 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 
   draw(ctx) {
-    // this.sprite = new Image();
 
     if (this.frame > 2) {
       this.frame = 0;
     }
 
-    this.sprite.src = "./sprites/player/cat.png";
     ctx.save();
 
     ctx.translate(this.pos[0], this.pos[1])
@@ -1362,6 +1370,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     if(this.i % 8 === 0) {
       this.frame++;
     }
+
     this.i++;
   }
 }
@@ -1841,7 +1850,8 @@ class StaticObject {
   }
 
   draw(ctx) {
-    ctx.fillStyle = "rgba(20, 20, 20, 0.5)";
+    // ctx.fillStyle = "rgba(20, 20, 20, 0.5)";
+    ctx.fillStyle = this.color;
     ctx.fillRect(this.topLeft[0], this.topLeft[1], this.width, this.height);
   }
 
