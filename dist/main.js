@@ -146,9 +146,9 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
         return this.bounce("horizontal");
       }
     }
-    
+
     else if(this.game.portalCollision([newX, this.pos[1]])) {
-      if(this.game.portalCollision([this.pos[0], newY]).connectedTo) {
+      if(this.game.portalCollision([newX, this.pos[1]]).connectedTo) {
         return this.game.portalCollision([newX, this.pos[1]]).teleport(this, [newX, this.pos[1]]);
       }
       else {
@@ -261,6 +261,315 @@ const AXIS = {
 
 /***/ }),
 
+/***/ "./lib/enemies/chaser.js":
+/*!*******************************!*\
+  !*** ./lib/enemies/chaser.js ***!
+  \*******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _enemy__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./enemy */ "./lib/enemies/enemy.js");
+/* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../moving_object */ "./lib/moving_object.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../game */ "./lib/game.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../util */ "./lib/util.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_3__);
+
+
+
+
+
+
+class Chaser extends _moving_object__WEBPACK_IMPORTED_MODULE_1__["default"] {
+  constructor(options) {
+    options.radius = 10;
+    super(options);
+
+    this.color = "#ff0000";
+    this.hive = options.hive;
+    this.trail = [this.pos];
+    this.maxLength = Chaser.MAX;
+    this.lifespan = options.lifespan || Math.floor(Math.random()*40);
+  }
+
+  draw(ctx) {
+    if(this.trail.length === 0) return;
+
+    const gradient = ctx.createLinearGradient(
+      this.pos[0], this.pos[1],
+      this.trail[0][0], this.trail[0][1]
+    );
+
+    if(this.lifespan > Chaser.HALF_LIFE) {
+      gradient.addColorStop(0, "#aaa");
+    } 
+    else if(this.lifespan > Chaser.HALF_LIFE * (3/2)) {
+      gradient.addColorStop(0, "#7f7f7f");
+    }
+    else {
+      gradient.addColorStop(0, "#fff");
+    }
+
+    gradient.addColorStop(1,  "#222");
+
+    
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = gradient;
+    // ctx.strokeStyle = this.color;
+    ctx.setLineDash([1, 0]);
+    
+    ctx.beginPath();
+    ctx.moveTo(this.pos[0], this.pos[1]);
+    ctx.lineTo(this.trail[0][0], this.trail[0][1]);
+    ctx.stroke(); 
+  }
+
+  bounce(direction) {
+    if(direction === "horizontal") {
+      this.vel[1] *= -1;
+    } else if (direction === "vertical") {
+      this.vel[0] *= -1;
+    } else {
+      this.vel[0] *= -1;
+      this.vel[1] *= -1;
+    }
+    
+    const reflection = new Chaser({
+      pos: this.pos,
+      vel: this.vel,
+      game: this.game,
+      hive: this.hive,
+      lifespan: this.lifespan
+    });
+
+    this.game.add(reflection);
+    this.vel = [0, 0];
+  }
+
+  move(timeDelta) {
+    const NORMAL_FRAME_TIME_DELTA = 1000 / _game__WEBPACK_IMPORTED_MODULE_2__["default"].FPS,
+      velocityScale = timeDelta / NORMAL_FRAME_TIME_DELTA,
+      offsetX = this.vel[0] * velocityScale,
+      offsetY = this.vel[1] * velocityScale;
+
+    const newX = this.pos[0] + offsetX;
+    const newY = this.pos[1] + offsetY;
+
+    const collisionX = this.game.wallCollision([this.pos[0], newY]);
+    const collisionY = this.game.wallCollision([newX, this.pos[1]]);
+    const collisionXY = this.game.wallCollision([newX, newY]);
+
+
+    if(collisionX) {
+      this.bounce("horizontal");
+    } else if (collisionY) {
+      this.bounce("vertical");
+    } else if (collisionXY) {
+      this.bounce("both");
+    }
+
+    this.lifespan++;
+
+    if(this.lifespan > Chaser.LIFESPAN) {
+      this.remove();
+    }
+
+    this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
+    this.pos[1] + (this.vel[1] * velocityScale)];
+    
+    this.trail.push(this.pos);
+
+    if(this.trail.length > Chaser.MAX) {
+      this.trail.shift();
+    }
+
+    if(this.lifespan > Chaser.HALF_LIFE) {
+      this.trail.shift();
+      this.trail.shift();
+    }  
+
+  }
+
+  isCollidedWith(otherObject) {
+    const centerDist = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dist(this.pos, otherObject.pos);
+    let centerDist2;
+
+    if (this.trail[this.trail.length/2]) {
+      centerDist2 = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dist(this.trail[0], otherObject.pos);
+      const centerDist3 = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dist(this.trail[this.trail.length/2], otherObject.pos);
+      return centerDist < (this.radius + otherObject.radius) ||
+      centerDist2 < (this.radius + otherObject.radius) ||
+      centerDist3 < (this.radius + otherObject.radius);
+    };
+
+    if (this.trail[0]) {
+      centerDist2 = _util__WEBPACK_IMPORTED_MODULE_3___default.a.dist(this.trail[0], otherObject.pos);
+      return centerDist < (this.radius + otherObject.radius) ||
+      centerDist2 < (this.radius + otherObject.radius);
+    };
+
+
+    return centerDist < (this.radius + otherObject.radius);
+  };
+
+}
+
+
+
+Chaser.LIFESPAN = 1000;
+Chaser.HALF_LIFE = Chaser.LIFESPAN/2;
+Chaser.MAX = 40;
+
+/* harmony default export */ __webpack_exports__["default"] = (Chaser);
+
+/***/ }),
+
+/***/ "./lib/enemies/chaser_hive.js":
+/*!************************************!*\
+  !*** ./lib/enemies/chaser_hive.js ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../moving_object */ "./lib/moving_object.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util */ "./lib/util.js");
+/* harmony import */ var _util__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_util__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _chaser__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./chaser */ "./lib/enemies/chaser.js");
+
+
+
+
+class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(options) {
+    super(options);
+    // this.pos = [350,350];
+    // this.radius = options.radius;
+    // this.game = options.game;
+    this.color = options.color || "#ffffff";
+    this.aggro = options.aggro || true;
+    this.health = 12;
+
+    this.alive = setInterval(() => { this.releaseChasers() }, 10000);
+  }
+
+  releaseChasers() {
+    for(let i = 0; i < ChaserHive.DIRECTIONS.length; i++) {
+      let relVel = ChaserHive.DIRECTIONS[i].slice();
+      relVel[0] *= ChaserHive.SPEED;
+      relVel[1] *= ChaserHive.SPEED;
+
+      let chaser = new _chaser__WEBPACK_IMPORTED_MODULE_2__["default"]({
+        pos: this.pos,
+        vel: relVel,
+        hive: this,
+        game: this.game
+      });
+
+      this.game.add(chaser);
+    }
+  }
+
+  path() {
+    const x = this.game.players[0].pos[0] - this.pos[0];
+    const y = this.game.players[0].pos[1] - this.pos[1];
+    const dist = _util__WEBPACK_IMPORTED_MODULE_1___default.a.dist(this.game.players[0].pos, this.pos);
+    return _util__WEBPACK_IMPORTED_MODULE_1___default.a.dir([x, y]);
+  }
+
+
+  move() {
+    if(this.aggro) {
+      const dir = this.path();
+      const newX = this.pos[0] + (dir[0] * 2);
+      const newY = this.pos[1] + (dir[1] * 2);
+  
+      const collisionX = this.game.wallCollision([this.pos[0], newY]);
+      const collisionY = this.game.wallCollision([newX, this.pos[1]]);
+  
+      const copy = this.pos;
+  
+      if(collisionX) {
+        return this.pos = [newX, copy[1]];
+      } else if(collisionY) {
+        return this.pos = [copy[0], newY];
+      }
+  
+      this.pos = [newX, newY];
+    }
+  }
+
+
+}
+
+const cos15 = Math.cos((15/180) * Math.PI);
+const sin15 = Math.sin((15/180) * Math.PI);
+
+const cos30 = Math.sqrt(3)/2;
+const sin30 = 1/2;
+
+ChaserHive.SPEED = 5;
+
+ChaserHive.DIRECTIONS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+
+  [sin30, cos30],
+  [sin30, -cos30],
+  [-sin30, cos30],
+  [-sin30, -cos30],
+
+  [cos30, sin30],
+  [-cos30, sin30],
+  [cos30, -sin30],
+  [-cos30, -sin30],
+
+  [cos15, sin15],
+  [-cos15, sin15],
+  [cos15, -sin15],
+  [-cos15, -sin15],
+
+  [sin15, cos15],
+  [-sin15, cos15],
+  [sin15, -cos15],
+  [-sin15, -cos15],
+]
+
+/* harmony default export */ __webpack_exports__["default"] = (ChaserHive);
+
+/***/ }),
+
+/***/ "./lib/enemies/enemy.js":
+/*!******************************!*\
+  !*** ./lib/enemies/enemy.js ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _moving_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../moving_object */ "./lib/moving_object.js");
+
+
+class Enemy extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(options) {
+    options.radius = 3;
+    super(options);
+    this.color = "#ffffff";
+    this.aggro = options.aggro || false;
+  }
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (Enemy);
+
+
+
+/***/ }),
+
 /***/ "./lib/game.js":
 /*!*********************!*\
   !*** ./lib/game.js ***!
@@ -276,7 +585,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _portal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./portal */ "./lib/portal.js");
 /* harmony import */ var _portal_gun__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./portal_gun */ "./lib/portal_gun.js");
 /* harmony import */ var _light__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./light */ "./lib/light.js");
-/* harmony import */ var _game_view__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./game_view */ "./lib/game_view.js");
+/* harmony import */ var _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./enemies/chaser_hive */ "./lib/enemies/chaser_hive.js");
+/* harmony import */ var _game_view__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./game_view */ "./lib/game_view.js");
+/* harmony import */ var _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./enemies/chaser */ "./lib/enemies/chaser.js");
+
+
 
 
 
@@ -292,6 +605,7 @@ class Game {
     this.lights = [];
     this.walls = [];
     this.portals = [];
+    this.enemies = [];
 
     this.addWall();
   }
@@ -308,6 +622,9 @@ class Game {
       this.portals.push(object);
     } else if (object instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"]) {
       this.lights.push(object);
+    } else if (object instanceof _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"] ||
+      object instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]) {
+      this.enemies.push(object);
     }
   }
 
@@ -318,7 +635,12 @@ class Game {
       this.portals.splice(this.portals.indexOf(object), 1);
     } else if (object instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"]) {
       this.lights.splice(this.lights.indexOf(object), 1);
-    } else {
+    } else if (object instanceof _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"] ||
+      object instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]) {
+      this.enemies.splice(this.enemies.indexOf(object), 1);
+    } 
+    
+    else {
       throw new Error("unknown type of object");
     }
   }
@@ -402,19 +724,26 @@ class Game {
     this.add(portal);
     this.add(portal2);
 
+    let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
+      pos: [70, 150],
+      game: this,
+      radius: 10
+    });
+
+    this.add(hive);
+    console.log(this.allObjects());
   }
 
   allMovingObjects() {
-    return [].concat(this.players, this.bullets, this.lights);
+    return [].concat(this.players, this.bullets, this.lights, this.enemies);
   }
 
   allObjects() {
-    return [].concat(this.bullets, this.walls, this.portals, this.lights);
+    return [].concat(this.bullets, this.walls, this.portals, this.lights, this.enemies);
   }
 
   draw(ctx, xView, yView) {
     ctx.save();
-
 
     if(this.players[0].portals.length === 2
       && !this.players[0].portals[0].connectedTo
@@ -482,20 +811,6 @@ class Game {
     (pos[0] > Game.DIM_X) || (pos[1] > Game.DIM_Y);
   }
 
-  checkBounce() {
-    // for(let i = 0; i < this.bullets.length; i++) {
-    //   if(this.bullets[i].pos[0] < 0 || this.bullets[i].pos[0] > Game.DIM_X) {
-    //     this.bullets[i].bounce("vertical");
-    //   } 
-    //   else if(this.bullets[i].pos[1] < 0 || this.bullets[i].pos[1] > Game.DIM_Y) {
-    //     this.bullets[i].bounce("horizontal");
-    //   } 
-
-    //   if(this.bullets[i].bounceCount > Bullet.LIFESPAN) {
-    //     this.bullets[i].remove();
-    //   }
-    // }
-  }
 
   wallCollissionCircle(player) {
     for(let i = 0; i < this.walls.length; i++) {
@@ -553,7 +868,7 @@ class Game {
         const obj1 = allObjects[i];
         const obj2 = allObjects[j];
 
-        if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
+        if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && (obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"] || obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"])
           && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
 
           if(obj1.shielding && obj1.shieldHealth > 0 && obj1.checkShieldHit(obj2)) {
@@ -564,7 +879,17 @@ class Game {
         }
 
         if (obj1.isCollidedWith(obj2)) {
+          if(obj1 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            obj1.hive.health--;
+            if(obj1.hive.health <= 0) {
+              clearInterval(obj1.hive.alive);
+              this.remove(obj1.hive);
 
+            }
+            this.remove(obj1);
+            this.remove(obj2);
+            console.log(obj1.hive.health);
+          }
           // if(obj1 instanceof Bullet && !(obj2 instanceof Bullet)) {
           //   this.remove(obj1);
           // }
@@ -821,7 +1146,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     options.radius = 1;
@@ -830,7 +1154,7 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.trail = [this.pos];
 
     this.maxLength = Light.MAX;
-    this.i = 0;
+
     this.lifespan = options.lifespan || Math.floor(Math.random()*40);
   }
   
@@ -862,13 +1186,7 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     ctx.beginPath();
     ctx.moveTo(this.pos[0], this.pos[1]);
     ctx.lineTo(this.trail[0][0], this.trail[0][1]);
-    ctx.stroke();
-    
-    // ctx.fillStyle = this.color;
-    // ctx.arc(
-    //   this.pos[0], this.pos[1], this.radius, 0, 2 * Math.PI, true
-    // );
-    // ctx.fill();
+    ctx.stroke(); 
   }
 
   bounce(direction) {
@@ -881,11 +1199,6 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.vel[1] *= -1;
     }
     
-    // if(this.bounceCount > Light.LIFESPAN) {
-    //   this.remove();
-    // }
-    // this.bounceCount++;
-
     const reflection = new Light({
       pos: this.pos,
       vel: this.vel,
@@ -895,7 +1208,6 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.game.add(reflection);
     this.vel = [0, 0];
-
   }
 
   move(timeDelta) {
@@ -911,7 +1223,7 @@ class Light extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const collisionY = this.game.wallCollision([newX, this.pos[1]]);
     const collisionXY = this.game.wallCollision([newX, newY]);
 
-    
+
     if(collisionX) {
       this.bounce("horizontal");
     } else if (collisionY) {
@@ -1092,12 +1404,12 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.shielding = false;
     this.shieldHealth = Player.MAX_SHIELD;
-    this.updateCursorPostion();
     this.cursorPostion = [0,0];
-
+    
     this.sprite = new Image();
     this.sprite.src = "./sprites/player/cat.png";
-
+    
+    this.updateCursorPostion();
 
     this.moving = false;
     this.frame = 0;
@@ -1182,9 +1494,14 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     pos[0] += radX;
     pos[1] += radY;
     
-    
-    relVel[0] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
-    relVel[1] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
+    if(type === "portal") {
+      relVel[0] *= _portal_gun__WEBPACK_IMPORTED_MODULE_2__["default"].SPEED;
+      relVel[1] *= _portal_gun__WEBPACK_IMPORTED_MODULE_2__["default"].SPEED;
+    }
+    else {
+      relVel[0] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
+      relVel[1] *= _bullet__WEBPACK_IMPORTED_MODULE_1__["default"].SPEED;
+    }
     
     if(type === "bullet") {
       const bullet = new _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]({
@@ -1540,7 +1857,6 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           object.vel[0] = -object.vel[1];
           object.vel[1] = -temp;
         }
-  
       }
   
       else if(this.connectedTo.dir === "right") {
@@ -1564,7 +1880,6 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   }
 
   draw(ctx) {
-
     if (this.frameCount > 23) {
       this.frameCount = 0;
     }
@@ -1612,6 +1927,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     let temp = this.connectedTo.color;
     this.connectedTo.active = false;
     this.connectedTo.color = Portal.PINK;
+
     setTimeout(() => {
       this.connectedTo.active = true;
       this.connectedTo.color = temp;
@@ -1784,6 +2100,7 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 PortalGun.RADIUS = 5;
 PortalGun.OFFSET = 5;
+PortalGun.SPEED = 10;
 
 
 /* harmony default export */ __webpack_exports__["default"] = (PortalGun);
@@ -1848,7 +2165,7 @@ class StaticObject {
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#000000";
+    this.color =  options.color || "#ffffff";
     this.game = options.game;
   }
 
