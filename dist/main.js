@@ -450,7 +450,7 @@ class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] 
 
     this.minions = [];
 
-    this.alive = setInterval(() => { this.releaseChasers() }, 1500);
+    this.alive = null;
   }
 
   releaseChasers() {
@@ -539,6 +539,13 @@ class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] 
 
       this.game.add(chaser);
       this.minions.push(chaser);
+    }
+  }
+
+  activate() {
+    if(!this.aggro) {
+      this.aggro = true;
+      this.alive = setInterval(() => { this.releaseChasers() }, 1500);
     }
   }
 
@@ -1043,6 +1050,9 @@ class Game {
         }
 
         if (obj1.isCollidedWith(obj2)) {
+          if(obj1 instanceof _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"] && (obj2 instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"] || obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"])) {
+            obj1.activate();
+          }
           if(obj1 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             obj1.hive.health--;
 
