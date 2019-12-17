@@ -786,6 +786,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./enemies/chaser_hive */ "./lib/enemies/chaser_hive.js");
 /* harmony import */ var _game_view__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./game_view */ "./lib/game_view.js");
 /* harmony import */ var _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./enemies/chaser */ "./lib/enemies/chaser.js");
+/* harmony import */ var _levels__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./levels */ "./lib/levels.js");
+
 
 
 
@@ -797,15 +799,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Game {
-  constructor() {
+  constructor(level, nextLevel) {
     this.players = [];
     this.bullets = [];
     this.lights = [];
     this.walls = [];
     this.portals = [];
     this.enemies = [];
+    this.goal = [];
+    this.level = _levels__WEBPACK_IMPORTED_MODULE_9__["default"][level];
 
-    this.addWall();
+    this.nextLevel = nextLevel;
+
+    this.startLevel();
   }
   
 
@@ -846,105 +852,60 @@ class Game {
   addPlayer() {
     const player = new _player__WEBPACK_IMPORTED_MODULE_0__["default"]({
       game: this,
-      pos: [400,400]
+      pos: this.level.start,
     });
 
     this.add(player);
     return player;
   }
 
-  addWall() {
-    let wall = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [0,0],
-      bottomRight: [100,100],
-      direction: "vertical",
-      game: this
-    });
+  startLevel() {
+    if(this.level) {
+      let walls = this.level.walls;
+      for(let i = 0; i < walls.length; i++) {
+        let settings = walls[i];
+        settings.game = this;
+        let wall = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"](settings);
+        this.add(wall);
+      }
 
-    let wall2 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [100,100],
-      bottomRight: [300,300],
-      direction: "vertical",
-      game: this
-    });
+      let goal = this.level.goal;
+      goal.game = this;
+      let goalObj = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"](goal);
+      this.goal.push(goalObj);
 
-    let wall3 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [0,0],
-      bottomRight: [1000,30],
-      direction: "vertical",
-      game: this
-    });
-    let wall4 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [0,0],
-      bottomRight: [30,600],
-      direction: "vertical",
-      game: this
-    });
-    let wall5 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [0,570],
-      bottomRight: [1000,600],
-      direction: "vertical",
-      game: this
-    });
-
-    let wall6 = new _wall__WEBPACK_IMPORTED_MODULE_2__["default"]({
-      topLeft: [970,0],
-      bottomRight: [1000,600],
-      direction: "vertical",
-      game: this
-    });
+      let enemies = this.level.enemies;
+      for(let j = 0; j < enemies.length; j++) {
+        let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
+          pos: enemies[j],
+          game: this,
+        });
+        this.add(hive);
+      }
+  
+    }
 
 
-    this.add(wall);
-    this.add(wall2);
-    this.add(wall3);
-    this.add(wall4);
-    this.add(wall5);
-    this.add(wall6);
+    // let portal = new Portal({
+    //   pos: [275, 300],
+    //   direction: "horizontal",
+    //   game: this,
+    //   dir: "down"
+    // });
 
-    let portal = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
-      pos: [275, 300],
-      direction: "horizontal",
-      game: this,
-      dir: "down"
-    });
-
-    let portal2 = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
-      pos: [125, 100],
-      direction: "horizontal",
-      game: this,
-      dir: "up"
-    });
+    // let portal2 = new Portal({
+    //   pos: [125, 100],
+    //   direction: "horizontal",
+    //   game: this,
+    //   dir: "up"
+    // });
     
-    portal2.connect(portal);
-    portal.connect(portal2);
+    // portal2.connect(portal);
+    // portal.connect(portal2);
 
-    this.add(portal);
-    this.add(portal2);
+    // this.add(portal);
+    // this.add(portal2);
 
-    let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
-      pos: [400, 400],
-      game: this,
-      radius: 10
-    });
-
-    this.add(hive);
-
-    // let hive1 = new ChaserHive({
-    //   pos: [800, 150],
-    //   game: this,
-    //   radius: 10
-    // });
-
-    // this.add(hive1);
-
-    // let hive2 = new ChaserHive({
-    //   pos: [500, 500],
-    //   game: this,
-    //   radius: 10
-    // });
-
-    // this.add(hive2);
   }
 
   allMovingObjects() {
@@ -1058,6 +1019,20 @@ class Game {
           return true;
       } 
     }
+    return false;
+  }
+
+  finishLevel(pos) {
+    for(let i = 0; i < this.goal.length; i++) {
+      let goal = this.goal[i];
+      if( !((pos[0] < goal.topLeft[0]) 
+        || (pos[0] > goal.bottomRight[0])
+        || (pos[1] < goal.topLeft[1])
+        || (pos[1] > goal.bottomRight[1]))) {
+          return true;
+      } 
+    }
+    return false;
   }
 
   portalCollision(pos) {
@@ -1081,7 +1056,7 @@ class Game {
         const obj1 = allObjects[i];
         const obj2 = allObjects[j];
 
-        if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && (obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"] || obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"])
+        if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]
           && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
 
           if(obj1.shielding && obj1.shieldHealth > 0 && obj1.checkShieldHit(obj2)) {
@@ -1093,16 +1068,21 @@ class Game {
               } 
             }
             this.remove(obj2);
-            console.log("shield");
           } 
           else if (obj1.isCollidedWith(obj2)) {
             if(obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]) {
               obj2.hive.health--;
+              if(obj2.hive.health <= 0) {
+                obj2.hive.remove();
+              } 
             }
             else if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             }
 
             obj1.health--;
+            if(obj1.health <= 0) {
+              console.log("dead")
+            }
             this.remove(obj2);
           }
 
@@ -1124,7 +1104,6 @@ class Game {
               this.remove(obj1);
             }
             this.remove(obj2);
-            console.log(obj1.hive.health);
           }   
         }
       }
@@ -1134,13 +1113,15 @@ class Game {
 }
 
 Game.BG_COLOR = "#000000";
-// Game.DIM_X = 1000;
-// Game.DIM_Y = 600;
 Game.DIM_X = 5000;
 Game.DIM_Y = 5000;
 
-Game.VIEW_X = 1000;
-Game.VIEW_Y = 600;
+// Game.VIEW_X = 1000;
+// Game.VIEW_Y = 600;
+
+Game.VIEW_X = window.innerWidth * 0.8;
+Game.VIEW_Y = window.innerHeight;
+
 
 Game.FPS = 32;
 
@@ -1165,18 +1146,20 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class GameView {
-  constructor(game, ctx) {
+  constructor(ctx) {
     this.ctx = ctx;
-    this.game = game;
+    this.level = 1;
+    
+    this.nextLevel = this.nextLevel.bind(this);
+    
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_2__["default"](this.level, this.nextLevel);
     this.player = this.game.addPlayer();
+  }
 
-    const vWidth = 1000;
-    const vHeight = 600;
-      // this.camera = new Camera(0, 0, vWidth, vHeight, 5000, 5000);
-
-      // this.camera.follow(this.player, vWidth / 2, vHeight / 2);
-
-    this.keyUp = this.keyUp.bind(this);
+  nextLevel() {
+    this.level++;
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_2__["default"](this.level, this.nextLevel);
+    this.player = this.game.addPlayer();
   }
   
   // w = 87; d = 68; a = 65; s = 83;
@@ -1202,13 +1185,17 @@ class GameView {
         this.player.fireBullet("portal"); 
     });
 
+    key("p", () => {
+      this.nextLevel();
+    });
+
 
     key("r", () => { 
       if(!this.player.timeStopCooldown)
         this.player.stopTime(); 
     });
 
-    key("f", () => { 
+    key("space", () => { 
       if(!this.player.lightCooldown) {
         this.player.shineLight(); 
       }
@@ -1248,8 +1235,8 @@ class GameView {
         this.player.moving = true;
       } 
     }
-
-    if(keys[32]) {
+    // console.log(keys)
+    if(keys[70]) {
       this.player.shielding = true;
       if(this.player.shieldHealth > _player__WEBPACK_IMPORTED_MODULE_0__["default"].MIN_SHIELD) {
         this.player.shieldHealth -= 0.075;
@@ -1263,12 +1250,12 @@ class GameView {
   }
 
 
-  keyUp(e) {
-    if(e.key === "w" || e.key === "s" ) 
-      this.player.vel[1] = 0;
-    if (e.key === "a" || e.key === "d")
-      this.player.vel[0] = 0;
-  }
+  // keyUp(e) {
+  //   if(e.key === "w" || e.key === "s" ) 
+  //     this.player.vel[1] = 0;
+  //   if (e.key === "a" || e.key === "d")
+  //     this.player.vel[0] = 0;
+  // }
 
   start() {
     this.bindKeyHandlers();
@@ -1285,7 +1272,7 @@ class GameView {
 
     // this.camera.update();
     
-    this.game.draw(this.ctx, 1000, 600);
+    this.game.draw(this.ctx, _game__WEBPACK_IMPORTED_MODULE_2__["default"].VIEW_X, _game__WEBPACK_IMPORTED_MODULE_2__["default"].VIEW_Y);
     this.lastTime = time;
 
     // every call to animate requests causes another call to animate
@@ -1319,6 +1306,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+let gameView;
 
 document.addEventListener("DOMContentLoaded", () => {
   const canvasEl = document.getElementById("game-canvas");
@@ -1331,16 +1319,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.canvas = canvasEl;
   window.rect = canvasEl.getBoundingClientRect();
-  const game = new _game__WEBPACK_IMPORTED_MODULE_0__["default"]();
 
-  window.game = game;
+  // window.game = game;
 
-  new _game_view__WEBPACK_IMPORTED_MODULE_1__["default"](game, ctx).start();
+  gameView = new _game_view__WEBPACK_IMPORTED_MODULE_1__["default"](ctx).start();
 
 });
 
 
 
+
+
+/***/ }),
+
+/***/ "./lib/levels.js":
+/*!***********************!*\
+  !*** ./lib/levels.js ***!
+  \***********************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const levels = {
+  1: {
+    walls: [
+      { topLeft: [0, 500],
+        bottomRight: [50, 600],
+      },
+      { topLeft: [0,0],
+        bottomRight: [500, 500],
+      },
+      { topLeft: [0, 600],
+        bottomRight: [1000, 1200],
+      },
+      { topLeft: [600, 0],
+        bottomRight: [1000, 1200],
+      },
+    ],
+    goal: { topLeft: [500, 0],
+      bottomRight: [600, 100],
+    },
+    start: [100, 550],
+    enemies: [
+      [400, 550]
+    ]
+  },
+
+  2: {
+    walls: [
+      { topLeft: [0, 500],
+        bottomRight: [50, 600],
+      },
+      { topLeft: [0,0],
+        bottomRight: [500, 500],
+      },
+      { topLeft: [0, 600],
+        bottomRight: [1000, 1200],
+      },
+    ],
+    goal: { topLeft: [500, 0],
+      bottomRight: [600, 100],
+    },
+    start: [100, 550],
+    enemies: [
+      [400, 550]
+    ]
+  },
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (levels);
 
 /***/ }),
 
@@ -1605,7 +1653,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.health = Player.MAX_HEALTH;
 
     // this.bullets = Player.MAX_BULLETS; 
-    // this.reloading = false;
+    this.reloading = false;
 
     this.portalBullets = 0;
     this.lightCooldown = false;
@@ -1660,6 +1708,14 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     else if(this.game.portalCollision(botRight) && this.game.portalCollision(botRight).active)
       return this.game.portalCollision(botRight).teleport(this, botRight);
 
+    
+    if(this.game.finishLevel(topLeft)
+      || this.game.finishLevel(botLeft)
+      || this.game.finishLevel(topRight)
+      || this.game.finishLevel(botRight)) {
+        console.log("win");
+        this.game.nextLevel();
+    }
   
     if(this.game.wallCollision(topLeft)
       || this.game.wallCollision(botLeft)
@@ -1723,6 +1779,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
       
       this.game.add(bullet);
+      this.reloading = true;
+      setTimeout(() => {
+        this.reloading = false;
+      }, 150);
       // this.bullets--;
       // console.log(`Ammo: ${this.bullets}`);
       
