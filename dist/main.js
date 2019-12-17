@@ -290,7 +290,7 @@ class Chaser extends _moving_object__WEBPACK_IMPORTED_MODULE_1__["default"] {
     this.hive = options.hive;
     this.trail = [this.pos];
     this.maxLength = Chaser.MAX;
-    this.lifespan = options.lifespan || Math.floor(Math.random()*40);
+    this.lifespan = options.lifespan || 0;
   }
 
   draw(ctx) {
@@ -302,19 +302,19 @@ class Chaser extends _moving_object__WEBPACK_IMPORTED_MODULE_1__["default"] {
     );
 
     if(this.lifespan > Chaser.HALF_LIFE) {
-      gradient.addColorStop(0, "#aaa");
+      gradient.addColorStop(0, "#ff0000");
     } 
     else if(this.lifespan > Chaser.HALF_LIFE * (3/2)) {
-      gradient.addColorStop(0, "#7f7f7f");
+      gradient.addColorStop(0, "#ff0000");
     }
     else {
-      gradient.addColorStop(0, "#fff");
+      gradient.addColorStop(0, "#ff0000");
     }
 
     gradient.addColorStop(1,  "#222");
 
     
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = gradient;
     // ctx.strokeStyle = this.color;
     ctx.setLineDash([1, 0]);
@@ -415,9 +415,7 @@ class Chaser extends _moving_object__WEBPACK_IMPORTED_MODULE_1__["default"] {
 
 }
 
-
-
-Chaser.LIFESPAN = 1000;
+Chaser.LIFESPAN = 100;
 Chaser.HALF_LIFE = Chaser.LIFESPAN/2;
 Chaser.MAX = 40;
 
@@ -445,19 +443,90 @@ __webpack_require__.r(__webpack_exports__);
 class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     super(options);
-    // this.pos = [350,350];
-    // this.radius = options.radius;
-    // this.game = options.game;
-    this.color = options.color || "#ffffff";
-    this.aggro = options.aggro || true;
-    this.health = 12;
+    this.color = options.color || "#000000";
+    this.aggro = options.aggro || false;
+    this.player = options.player;
+    this.health = 20;
 
-    this.alive = setInterval(() => { this.releaseChasers() }, 10000);
+    this.minions = [];
+
+    this.alive = setInterval(() => { this.releaseChasers() }, 1500);
   }
 
   releaseChasers() {
-    for(let i = 0; i < ChaserHive.DIRECTIONS.length; i++) {
-      let relVel = ChaserHive.DIRECTIONS[i].slice();
+    let vect = _util__WEBPACK_IMPORTED_MODULE_1___default.a.dir([this.game.players[0].pos[0] - this.pos[0], 
+      this.game.players[0].pos[1]- this.pos[1]]);
+    let angle = Math.atan2(vect[1],vect[0])*180/Math.PI;
+    
+    let directions = ChaserHive.DIRECTIONS.slice();
+
+    if(this.health <= 5) {
+      if(angle > -45 && angle < 45) { 
+        directions = directions.slice(0,5);
+      }
+      else if(angle > 45 && angle < 135) {
+        directions = directions.slice(5,10);
+      }
+      else if(angle > 135 || angle < -135) {
+        directions = directions.slice(10,15);
+      }
+      else if(angle < -45 && angle > -135) {
+        directions = directions.slice(15,20);
+      }
+    }  
+    else if(this.health <= 10) {
+      if(angle > -45 && angle < 45) { 
+        directions.splice(10,5);
+
+        if(angle < 0) 
+          directions.splice(5,5);
+        else
+          directions.splice(15,5);
+      }
+      else if(angle > 45 && angle < 135) {
+        directions.splice(15,5);
+
+        if(angle < 90) 
+          directions.splice(10,5);
+        else
+          directions.splice(0,5);
+      }
+      else if(angle > 135 || angle < -135) {
+        directions.splice(0,5);
+
+        if(angle > 0) 
+          directions.splice(15,5);
+        else 
+          directions.splice(0,5);
+      }
+      else if(angle < -45 && angle > -135) {
+        directions.splice(5,5);
+
+        if(angle > -90) 
+          directions.splice(5,5);
+        else 
+          directions.splice(15,5);
+      }
+    }
+
+    else if(this.health <= 15) {
+      if(angle > -45 && angle < 45) { 
+        directions.splice(10,5);
+      }
+      else if(angle > 45 && angle < 135) {
+        directions.splice(15,5);
+      }
+      else if(angle > 135 || angle < -135) { 
+        directions.splice(0,5);
+      }
+      else if(angle < -45 && angle > -135) {
+        directions.splice(5,5);
+      }
+    }
+  
+    for(let i = 0; i < this.health; i++) {
+
+      let relVel = directions[i].slice();
       relVel[0] *= ChaserHive.SPEED;
       relVel[1] *= ChaserHive.SPEED;
 
@@ -469,34 +538,50 @@ class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] 
       });
 
       this.game.add(chaser);
+      this.minions.push(chaser);
     }
+  }
+
+  remove() {
+    for(let i = 0; i < this.minions.length; i++) {
+      this.game.remove(this.minions[i]);
+    }
+
+    clearInterval(this.alive);
+    this.game.remove(this);
   }
 
   path() {
     const x = this.game.players[0].pos[0] - this.pos[0];
     const y = this.game.players[0].pos[1] - this.pos[1];
-    const dist = _util__WEBPACK_IMPORTED_MODULE_1___default.a.dist(this.game.players[0].pos, this.pos);
+    // const dist = Util.dist(this.game.players[0].pos, this.pos);
     return _util__WEBPACK_IMPORTED_MODULE_1___default.a.dir([x, y]);
   }
 
 
   move() {
+    // let vect = Util.dir([this.game.players[0].pos[0] - this.pos[0], 
+    //   this.game.players[0].pos[0]- this.pos[1]]);
+    //   console.log(Math.atan2(vect[1],vect[0])*180/Math.PI)
     if(this.aggro) {
       const dir = this.path();
-      const newX = this.pos[0] + (dir[0] * 2);
-      const newY = this.pos[1] + (dir[1] * 2);
+      const newX = this.pos[0] + (dir[0] * 1);
+      const newY = this.pos[1] + (dir[1] * 1);
   
       const collisionX = this.game.wallCollision([this.pos[0], newY]);
       const collisionY = this.game.wallCollision([newX, this.pos[1]]);
   
       const copy = this.pos;
-  
-      if(collisionX) {
+
+
+      if(collisionX && collisionY) {
+        return;
+      } else if(collisionX) {
         return this.pos = [newX, copy[1]];
       } else if(collisionY) {
         return this.pos = [copy[0], newY];
-      }
-  
+      } 
+
       this.pos = [newX, newY];
     }
   }
@@ -512,32 +597,90 @@ const sin30 = 1/2;
 
 ChaserHive.SPEED = 5;
 
+// ChaserHive.DIRECTIONS = [
+//   [1, 0],
+//   [-1, 0],
+//   [0, 1],
+//   [0, -1],
+
+//   [sin30, cos30],
+//   [sin30, -cos30],
+//   [-sin30, cos30],
+//   [-sin30, -cos30],
+
+//   [cos30, sin30],
+//   [-cos30, sin30],
+//   [cos30, -sin30],
+//   [-cos30, -sin30],
+
+//   [cos15, sin15],
+//   [-cos15, sin15],
+//   [cos15, -sin15],
+//   [-cos15, -sin15],
+
+//   [sin15, cos15],
+//   [-sin15, cos15],
+//   [sin15, -cos15],
+//   [-sin15, -cos15],
+// ]
+
+// ChaserHive.DIRECTIONS = [
+//   [1, 0],
+//   [cos15, sin15],
+//   [cos30, sin30],
+//   [sin30, cos30],
+//   [sin15, cos15],
+  
+//   [0, 1],
+//   [-cos30, sin30],
+//   [-cos15, sin15],
+//   [-sin30, cos30],
+//   [-sin15, cos15],
+
+//   [-1, 0],
+//   [-sin30, -cos30],
+//   [-cos30, -sin30],
+//   [-cos15, -sin15],
+//   [-sin15, -cos15],
+
+
+//   [0, -1],
+//   [sin30, -cos30],
+//   [cos30, -sin30],
+//   [cos15, -sin15],
+//   [sin15, -cos15],
+// ]
+
+// right, up, left, down
 ChaserHive.DIRECTIONS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-
-  [sin30, cos30],
-  [sin30, -cos30],
-  [-sin30, cos30],
-  [-sin30, -cos30],
-
-  [cos30, sin30],
-  [-cos30, sin30],
-  [cos30, -sin30],
-  [-cos30, -sin30],
-
   [cos15, sin15],
-  [-cos15, sin15],
+  [cos30, sin30],
+  [1, 0],
   [cos15, -sin15],
-  [-cos15, -sin15],
+  [cos30, -sin30],
+  
 
   [sin15, cos15],
+  [sin30, cos30],
+  [0, 1],
   [-sin15, cos15],
-  [sin15, -cos15],
+  [-sin30, cos30],
+  
+  
+  [-cos30, sin30],
+  [-cos15, sin15],
+  [-1, 0],
+  [-cos30, -sin30],
+  [-cos15, -sin15],
+  
+  
+  [-sin30, -cos30],
   [-sin15, -cos15],
+  [0, -1],
+  [sin30, -cos30],
+  [sin15, -cos15],
 ]
+
 
 /* harmony default export */ __webpack_exports__["default"] = (ChaserHive);
 
@@ -725,13 +868,28 @@ class Game {
     this.add(portal2);
 
     let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
-      pos: [70, 150],
+      pos: [400, 400],
       game: this,
       radius: 10
     });
 
     this.add(hive);
-    console.log(this.allObjects());
+
+    // let hive1 = new ChaserHive({
+    //   pos: [800, 150],
+    //   game: this,
+    //   radius: 10
+    // });
+
+    // this.add(hive1);
+
+    // let hive2 = new ChaserHive({
+    //   pos: [500, 500],
+    //   game: this,
+    //   radius: 10
+    // });
+
+    // this.add(hive2);
   }
 
   allMovingObjects() {
@@ -873,6 +1031,12 @@ class Game {
 
           if(obj1.shielding && obj1.shieldHealth > 0 && obj1.checkShieldHit(obj2)) {
             obj1.shieldHealth--;
+            if(obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]) {
+              obj2.hive.health--;
+              if(obj2.hive.health <= 0) {
+                obj2.hive.remove();
+              } 
+            }
             this.remove(obj2);
             console.log("shield");
           }
@@ -881,12 +1045,13 @@ class Game {
         if (obj1.isCollidedWith(obj2)) {
           if(obj1 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             obj1.hive.health--;
-            if(obj1.hive.health <= 0) {
-              clearInterval(obj1.hive.alive);
-              this.remove(obj1.hive);
 
+            if(obj1.hive.health <= 0) {
+              obj1.hive.remove();
+            } 
+            else {
+              this.remove(obj1);
             }
-            this.remove(obj1);
             this.remove(obj2);
             console.log(obj1.hive.health);
           }
@@ -1439,13 +1604,13 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     const topRight = [newX + radX, newY - radY];
     const botRight = [newX + radX, newY + radY];
 
-    if(this.game.portalCollision(topLeft))
+    if(this.game.portalCollision(topLeft) && this.game.portalCollision(topLeft).active)
       return this.game.portalCollision(topLeft).teleport(this, topLeft);
-    else if(this.game.portalCollision(botLeft))
+    else if(this.game.portalCollision(botLeft) && this.game.portalCollision(botLeft).active)
       return this.game.portalCollision(botLeft).teleport(this, botLeft);
-    else if(this.game.portalCollision(topRight))
+    else if(this.game.portalCollision(topRight) && this.game.portalCollision(topRight).active)
       return this.game.portalCollision(topRight).teleport(this, topRight);
-    else if(this.game.portalCollision(botRight))
+    else if(this.game.portalCollision(botRight) && this.game.portalCollision(botRight).active)
       return this.game.portalCollision(botRight).teleport(this, botRight);
 
   
@@ -1514,14 +1679,14 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.bullets--;
       console.log(`Ammo: ${this.bullets}`);
       
-      if(this.bullets <= 0) {
-        console.log('reloading...');
-        this.reloading = true;
-        this.bullets = Player.MAX_BULLETS;
-        setTimeout(() => {
-          this.reloading = false;
-        }, 1500);
-      }
+      // if(this.bullets <= 0) {
+      //   console.log('reloading...');
+      //   this.reloading = true;
+      //   this.bullets = Player.MAX_BULLETS;
+      //   setTimeout(() => {
+      //     this.reloading = false;
+      //   }, 1500);
+      // }
       
     } else if (type === "portal") {
       const portalGun = new _portal_gun__WEBPACK_IMPORTED_MODULE_2__["default"]({
@@ -1597,10 +1762,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.game.add(light);
     }
 
-    // this.lightCooldown = true;
-    // setTimeout(() => {
-    //   this.lightCooldown = false;
-    // }, 1000);
+    this.lightCooldown = true;
+    setTimeout(() => {
+      this.lightCooldown = false;
+    }, 500);
   }
 
   stopTime() {
@@ -1700,8 +1865,8 @@ const sideMove = Math.sqrt(2)/2;
 Player.MAX_BULLETS = 12;
 Player.MAX_HEALTH = 3;
 Player.MIN_SHIELD = 0;
-Player.MAX_SHIELD = 3;
-Player.SHIELD_RADIUS = 4;
+Player.MAX_SHIELD = 10;
+Player.SHIELD_RADIUS = 2;
 
 Player.WIDTH = 48;
 Player.HEIGHT = 48;
