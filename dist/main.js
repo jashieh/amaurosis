@@ -104,9 +104,38 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     options.radius = Bullet.RADIUS;
     super(options);
-    this.bounceCount = 0;
     this.color = "#66ff00";
     this.type = "";
+    
+    this.bounceCount = options.bounceCount || 0;
+    this.trail = [this.pos];
+    this.tailColor = "#222";
+    this.midColor = "#032cfc";
+    this.headColor = "#8403fc";
+  }
+
+  draw(ctx) {
+    if(this.trail.length === 0) return;
+
+    const gradient = ctx.createLinearGradient(
+      this.pos[0], this.pos[1],
+      this.trail[0][0], this.trail[0][1]
+    );
+
+
+    gradient.addColorStop(0, this.headColor);
+    gradient.addColorStop(0.5, this.midColor);
+    gradient.addColorStop(1,  this.tailColor);
+
+    
+    ctx.lineWidth = this.radius;
+    ctx.strokeStyle = gradient;
+    ctx.setLineDash([1, 0]);
+    
+    ctx.beginPath();
+    ctx.moveTo(this.pos[0], this.pos[1]);
+    ctx.lineTo(this.trail[0][0], this.trail[0][1]);
+    ctx.stroke(); 
   }
 
   bounce(direction) {
@@ -118,10 +147,23 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       this.vel[0] *= -1;
       this.vel[1] *= -1;
     }
+
     this.bounceCount++;
+    
+    this.remove();
     if(this.bounceCount > Bullet.LIFESPAN) {
-      this.remove();
+      return;
     }
+    
+    const reflection = new Bullet({
+      pos: this.pos,
+      vel: this.vel,
+      game: this.game,
+      bounceCount: this.bounceCount
+    });
+    
+    this.game.add(reflection);
+    // this.vel = [0, 0];
   }
 
   move(timeDelta) {
@@ -166,12 +208,18 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
       this.pos[1] + (this.vel[1] * velocityScale)];
+    this.trail.push(this.pos);
+
+    if(this.trail.length > Bullet.MAX) {
+      this.trail.shift();
+    }
   }
 }
 
 Bullet.RADIUS = 3;
 Bullet.SPEED = 10;
-Bullet.LIFESPAN = 5;
+Bullet.LIFESPAN = 3;
+Bullet.MAX = 15;
 
 /* harmony default export */ __webpack_exports__["default"] = (Bullet);
 
@@ -1046,14 +1094,27 @@ class Game {
             }
             this.remove(obj2);
             console.log("shield");
+          } 
+          else if (obj1.isCollidedWith(obj2)) {
+            if(obj2 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"]) {
+              obj2.hive.health--;
+            }
+            else if(obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            }
+
+            obj1.health--;
+            this.remove(obj2);
           }
+
         }
 
-        if (obj1.isCollidedWith(obj2)) {
-          if(obj1 instanceof _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"] && (obj2 instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"] || obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"])) {
+        else if (obj1.isCollidedWith(obj2)) {
+          if(obj1 instanceof _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"] && (obj2 instanceof _light__WEBPACK_IMPORTED_MODULE_5__["default"] || obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"])
+          && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
             obj1.activate();
           }
-          if(obj1 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+          if(obj1 instanceof _enemies_chaser__WEBPACK_IMPORTED_MODULE_8__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"] && 
+            !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
             obj1.hive.health--;
 
             if(obj1.hive.health <= 0) {
@@ -1064,31 +1125,7 @@ class Game {
             }
             this.remove(obj2);
             console.log(obj1.hive.health);
-          }
-          // if(obj1 instanceof Bullet && !(obj2 instanceof Bullet)) {
-          //   this.remove(obj1);
-          // }
-          // if(obj2 instanceof Bullet && !(obj1 instanceof Bullet)) {
-          //   this.remove(obj2);
-          // }
-          if(obj1 instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"] && obj2 instanceof _bullet__WEBPACK_IMPORTED_MODULE_1__["default"]
-            && !(obj2 instanceof _portal_gun__WEBPACK_IMPORTED_MODULE_4__["default"])) {
-            obj1.health--;
-            this.remove(obj2);
-            console.log(obj1.health);
-            console.log("hit")
-          } 
-          // else if (obj2 instanceof Player && obj1 instanceof Bullet) {
-          //   obj1.health--;
-          //   this.remove(obj1);
-
-          //   console.log(obj2.health);
-
-          //   console.log("hit")
-          // }
-          // const collision = obj1.collideWith(obj2);
-          // if (collision) return;
-          
+          }   
         }
       }
     }
@@ -1215,12 +1252,12 @@ class GameView {
     if(keys[32]) {
       this.player.shielding = true;
       if(this.player.shieldHealth > _player__WEBPACK_IMPORTED_MODULE_0__["default"].MIN_SHIELD) {
-        this.player.shieldHealth -= 0.02;
+        this.player.shieldHealth -= 0.075;
       }
     } else {
       this.player.shielding = false;
       if(this.player.shieldHealth < _player__WEBPACK_IMPORTED_MODULE_0__["default"].MAX_SHIELD) {
-        this.player.shieldHealth += 0.01;
+        this.player.shieldHealth += 0.05;
       }
     }
   }
@@ -1567,8 +1604,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.portals = [];
     this.health = Player.MAX_HEALTH;
 
-    this.bullets = Player.MAX_BULLETS; 
-    this.reloading = false;
+    // this.bullets = Player.MAX_BULLETS; 
+    // this.reloading = false;
 
     this.portalBullets = 0;
     this.lightCooldown = false;
@@ -1686,8 +1723,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
       
       this.game.add(bullet);
-      this.bullets--;
-      console.log(`Ammo: ${this.bullets}`);
+      // this.bullets--;
+      // console.log(`Ammo: ${this.bullets}`);
       
       // if(this.bullets <= 0) {
       //   console.log('reloading...');
@@ -1845,15 +1882,16 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     ctx.drawImage(this.sprite, 
       sx,sy, 48, 48,
-      -22, -27,
-      48, 48
+      -16, -23,
+      35, 35
     );
 
     ctx.restore();
 
 
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    // ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.strokeStyle = "#b503fc";
     ctx.setLineDash([1,0]);
     ctx.beginPath();
     ctx.arc(
@@ -1873,10 +1911,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 const sideMove = Math.sqrt(2)/2;
 
 Player.MAX_BULLETS = 12;
-Player.MAX_HEALTH = 3;
+Player.MAX_HEALTH = 10;
 Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 10;
-Player.SHIELD_RADIUS = 2;
+Player.SHIELD_RADIUS = 1;
 
 Player.WIDTH = 48;
 Player.HEIGHT = 48;
@@ -1958,6 +1996,7 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     if(this.connectedTo && this.active && (object instanceof _player__WEBPACK_IMPORTED_MODULE_1__["default"])) {
       this.toggleActive();
       this.connectedTo.toggleActive();
+
 
       // let offsetX = (this.pos[0] - pos[0]);
       // let offsetY = (this.pos[1] - pos[1]);
@@ -2050,6 +2089,17 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
           object.vel[1] = -temp;
         }
       }
+    }
+    
+    if(object instanceof _bullet__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+      object.remove();
+      object = new _bullet__WEBPACK_IMPORTED_MODULE_2__["default"]({
+        pos: object.pos,
+        vel: object.vel,
+        game: object.game,
+        bounceCount: object.bounceCount
+      });
+      this.game.add(object);
     }
 
   }
@@ -2195,7 +2245,9 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
     super(options);
     this.player = options.player;
 
-    this.color = "#800080";
+    this.tailColor = "#222";
+    this.midColor = "#fce703";
+    this.headColor = "#fc9003";
   }
 
   move(timeDelta) {
@@ -2270,12 +2322,18 @@ class PortalGun extends _bullet__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.pos = [this.pos[0] + (this.vel[0] * velocityScale), 
       this.pos[1] + (this.vel[1] * velocityScale)];
+    this.trail.push(this.pos);
+
+    if(this.trail.length > PortalGun.MAX) {
+      this.trail.shift();
+    }
   }
 }
 
 PortalGun.RADIUS = 5;
 PortalGun.OFFSET = 5;
 PortalGun.SPEED = 10;
+PortalGun.MAX = 30;
 
 
 /* harmony default export */ __webpack_exports__["default"] = (PortalGun);
