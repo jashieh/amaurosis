@@ -225,90 +225,6 @@ Bullet.MAX = 15;
 
 /***/ }),
 
-/***/ "./lib/camera.js":
-/*!***********************!*\
-  !*** ./lib/camera.js ***!
-  \***********************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _rectangle__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rectangle */ "./lib/rectangle.js");
-
-
-class Camera {
-  constructor(xView, yView, viewportWidth, 
-    viewportHeight, worldWidth, worldHeight) {
-    
-    this.xView = xView || 0;
-	  this.yView = yView || 0;
-
-	  this.xDeadZone = 0; 
-	  this.yDeadZone = 0; 
-
-	  this.wView = viewportWidth;
-	  this.hView = viewportHeight;
-
-	  this.axis = AXIS.BOTH;
-
-    this.followed = null;
-    this.viewportRect = new _rectangle__WEBPACK_IMPORTED_MODULE_0__["default"](this.xView, this.yView, 
-      this.wView, this.hView);
-    this.worldRect = new _rectangle__WEBPACK_IMPORTED_MODULE_0__["default"](0, 0, worldWidth, worldHeight);
-  }
-
-  follow(gameObject, xDeadZone, yDeadZone) {
-    this.followed = gameObject;
-    this.xDeadZone = xDeadZone;
-    this.yDeadZone = yDeadZone;
-  }
-
-  update() {
-    if (this.followed != null) {
-      if (this.axis == AXIS.HORIZONTAL || this.axis == AXIS.BOTH) {
-        if (this.followed.pos[0] - this.xView + this.xDeadZone > this.wView)
-          this.xView = this.followed.pos[0] - (this.wView - this.xDeadZone);
-        else if (this.followed.pos[0] - this.xDeadZone < this.xView)
-          this.xView = this.followed.pos[0] - this.xDeadZone;
-
-      }
-      if (this.axis == AXIS.VERTICAL || this.axis == AXIS.BOTH) {
-        if (this.followed.pos[1] - this.yView + this.yDeadZone > this.hView)
-          this.yView = this.followed.pos[1] - (this.hView - this.yDeadZone);
-        else if (this.followed.pos[1] - this.yDeadZone < this.yView)
-          this.yView = this.followed.pos[1] - this.yDeadZone;
-      }
-
-    }
-
-    this.viewportRect.set(this.xView, this.yView);
-
-    if (!this.viewportRect.within(this.worldRect)) {
-      if (this.viewportRect.left < this.worldRect.left)
-        this.xView = this.worldRect.left;
-      if (this.viewportRect.top < this.worldRect.top)
-        this.yView = this.worldRect.top;
-      if (this.viewportRect.right > this.worldRect.right)
-        this.xView = this.worldRect.right - this.wView;
-      if (this.viewportRect.bottom > this.worldRect.bottom)
-        this.yView = this.worldRect.bottom - this.hView;
-    }
-  }
-
-}
-
-const AXIS = {
-  NONE: 1,
-  HORIZONTAL: 2,
-  VERTICAL: 3,
-  BOTH: 4 
-};
-
-/* harmony default export */ __webpack_exports__["default"] = (Camera);
-
-/***/ }),
-
 /***/ "./lib/enemies/chaser.js":
 /*!*******************************!*\
   !*** ./lib/enemies/chaser.js ***!
@@ -494,7 +410,7 @@ class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.color = options.color || "#000000";
     this.aggro = options.aggro || false;
     this.player = options.player;
-    this.health = 20;
+    this.health = options.health || 20;
 
     this.minions = [];
 
@@ -875,12 +791,14 @@ class Game {
       this.goal.push(goalObj);
 
       let enemies = this.level.enemies;
-      for(let j = 0; j < enemies.length; j++) {
-        let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
-          pos: enemies[j],
-          game: this,
-        });
-        this.add(hive);
+      if(this.level.enemies) {
+        for(let j = 0; j < enemies.length; j++) {
+          let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
+            pos: enemies[j],
+            game: this,
+          });
+          this.add(hive);
+        }
       }
   
     }
@@ -1116,7 +1034,7 @@ Game.DIM_Y = 5000;
 // Game.VIEW_X = 1000;
 // Game.VIEW_Y = 600;
 
-Game.VIEW_X = window.innerWidth * 0.8;
+Game.VIEW_X = window.innerWidth;
 Game.VIEW_Y = window.innerHeight;
 
 
@@ -1136,27 +1054,39 @@ Game.FPS = 32;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./player */ "./lib/player.js");
-/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./camera */ "./lib/camera.js");
-/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game */ "./lib/game.js");
 
-
+// import Camera from "./camera";
 
 
 class GameView {
   constructor(ctx) {
     this.ctx = ctx;
+
     this.level = 1;
     
     this.nextLevel = this.nextLevel.bind(this);
     
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_2__["default"](this.level, this.nextLevel);
+    this.startScreen = true;
+    this.instructions = false;
+    this.splash = true;
+    this.splashEle = document.getElementById('splash');
+    
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel);
     this.player = this.game.addPlayer();
   }
 
   nextLevel() {
     this.level++;
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_2__["default"](this.level, this.nextLevel);
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel);
     this.player = this.game.addPlayer();
+
+    this.splash = true;
+    this.splashEle.style.visibility = "visible";
+  }
+
+  gameOver() {
+    
   }
   
   // w = 87; d = 68; a = 65; s = 83;
@@ -1172,13 +1102,13 @@ class GameView {
 
     document.addEventListener("mousedown",() => {
       if(this.player.shieldHealth < 0.01 || !this.player.shielding && 
-        !this.player.reloading) {
+        !this.player.reloading && !this.splash) {
         this.player.fireBullet("bullet");
       }
     });
 
     key("e", () => { 
-      if(!this.player.portalCooldown)
+      if(!this.player.portalCooldown && !this.splash)
         this.player.fireBullet("portal"); 
     });
 
@@ -1188,13 +1118,27 @@ class GameView {
 
 
     key("r", () => { 
-      if(!this.player.timeStopCooldown)
+      if(!this.player.timeStopCooldown && !this.splash)
         this.player.stopTime(); 
     });
 
     key("space", () => { 
-      if(!this.player.lightCooldown) {
+      if(!this.player.lightCooldown && !this.splash) {
         this.player.shineLight(); 
+      }
+      if(this.startScreen) {
+        this.startScreen = false;
+        this.instructions = true;
+        document.getElementById("start-screen").style.display = "none";
+        document.getElementById("instructions").style.display = "flex";
+      } else if(this.instructions){
+        this.instructions = false;
+        document.getElementById("instructions").style.visibility = "hidden";
+        this.splashEle.style.visibility = "hidden";
+        this.splash = false;
+      } else if(this.splash) {
+        this.splashEle.style.visibility = "hidden";
+        this.splash = false;
       }
     });
 
@@ -1205,7 +1149,7 @@ class GameView {
   keyPressed() {
     // console.log(keys);
     this.player.moving = false;
-    if(this.player.shieldHealth < 0.01 || !this.player.shielding) {
+    if(!this.splash && (this.player.shieldHealth < 0.01 || !this.player.shielding)) {
       if (keys[87] && keys[65]) {
         this.player.move("wa");
         this.player.moving = true;
@@ -1269,7 +1213,7 @@ class GameView {
 
     // this.camera.update();
     
-    this.game.draw(this.ctx, _game__WEBPACK_IMPORTED_MODULE_2__["default"].VIEW_X, _game__WEBPACK_IMPORTED_MODULE_2__["default"].VIEW_Y);
+    this.game.draw(this.ctx, _game__WEBPACK_IMPORTED_MODULE_1__["default"].VIEW_X, _game__WEBPACK_IMPORTED_MODULE_1__["default"].VIEW_Y);
     this.lastTime = time;
 
     // every call to animate requests causes another call to animate
@@ -1807,7 +1751,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
         setTimeout(() => {
           this.portalCooldown = false;
-          // clearInterval(cd);
         }, Player.PORTAL_CD*1000);
       }
       
@@ -1870,11 +1813,9 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.lightCooldown = true;
     this.lightTimer = Player.LIGHT_CD;
     this.lightInt = setInterval(()=>{this.lightTimer -= 0.1}, 100);
-    // let cd = setInterval(()=>{this.lightTimer -= 0.1}, 100);
 
     setTimeout(() => {
       this.lightCooldown = false;
-      // clearInterval(cd);
     }, Player.LIGHT_CD*1000);
   }
 
@@ -1891,13 +1832,14 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     setTimeout(() => {
       this.timeStopCooldown = false;
-      // clearInterval(cd);
     }, Player.TIMESTOP_CD*1000);
   }
 
   mouseMove(e) {
-    this.cursorPostion[0] = e.clientX + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X/2 + this.pos[0]);
-    this.cursorPostion[1] = e.clientY + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_Y/2 + this.pos[1]);
+    if(e.clientX <= _game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X) {
+      this.cursorPostion[0] = e.clientX + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X/2 + this.pos[0]);
+      this.cursorPostion[1] = e.clientY + (-_game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_Y/2 + this.pos[1]);
+    }
   }
 
   updateCursorPostion() {
@@ -2473,48 +2415,6 @@ PortalGun.MAX = 30;
 
 
 /* harmony default export */ __webpack_exports__["default"] = (PortalGun);
-
-/***/ }),
-
-/***/ "./lib/rectangle.js":
-/*!**************************!*\
-  !*** ./lib/rectangle.js ***!
-  \**************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-class Rectangle {
- constructor(left, top, width, height) {
-  this.left = left || 0;
-  this.top = top || 0;
-  this.width = width || 0;
-  this.height = height || 0;
-  this.right = this.left + this.width;
-  this.bottom = this.top + this.height;
- }
-
- set(left, top, width, height) {
-  this.left = left;
-  this.top = top;
-  this.width = width || this.width;
-  this.height = height || this.height
-  this.right = (this.left + this.width);
-  this.bottom = (this.top + this.height); 
- }
-
- within(rect) {
-  return (rect.left <= this.left &&
-    rect.right >= this.right &&
-    rect.top <= this.top &&
-    rect.bottom >= this.bottom);
- }
-
-
-}
-
-/* harmony default export */ __webpack_exports__["default"] = (Rectangle);
 
 /***/ }),
 
