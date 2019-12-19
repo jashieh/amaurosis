@@ -1655,13 +1655,16 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     this.lightCooldown = false;
     this.lightTimer = 0;
+    this.lightInt = null;
 
     this.portalCooldown = false;
     this.portalTimer = 0;
+    this.portalInt = null;
 
     this.timeStop = false;
     this.timeStopCooldown = false;
     this.stopTimer = 0;
+    this.stopInt = null;
 
     this.shielding = false;
     this.shieldHealth = Player.MAX_SHIELD;
@@ -1769,10 +1772,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
       
       this.game.add(bullet);
-      this.reloading = true;
-      setTimeout(() => {
-        this.reloading = false;
-      }, 150);
+      // this.reloading = true;
+      // setTimeout(() => {
+      //   this.reloading = false;
+      // }, 150);
       // this.bullets--;
       // console.log(`Ammo: ${this.bullets}`);
       
@@ -1798,13 +1801,13 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       if(this.portalBullets === 2) {
         this.portalCooldown = true;
         this.portalBullets = 0;
-        this.portalTimer = 0;
-        let cd = setInterval(()=>{this.portalTimer += 0.1}, 100);
+        this.portalTimer = Player.PORTAL_CD;
+        this.portalInt = setInterval(()=>{this.portalTimer -= 0.1}, 100);
 
 
         setTimeout(() => {
           this.portalCooldown = false;
-          clearInterval(cd);
+          // clearInterval(cd);
         }, Player.PORTAL_CD*1000);
       }
       
@@ -1865,21 +1868,22 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     }
 
     this.lightCooldown = true;
-    this.lightTimer = 0;
-    let cd = setInterval(()=>{this.lightTimer += 0.1}, 100);
+    this.lightTimer = Player.LIGHT_CD;
+    this.lightInt = setInterval(()=>{this.lightTimer -= 0.1}, 100);
+    // let cd = setInterval(()=>{this.lightTimer -= 0.1}, 100);
 
     setTimeout(() => {
       this.lightCooldown = false;
-      clearInterval(cd);
+      // clearInterval(cd);
     }, Player.LIGHT_CD*1000);
   }
 
   stopTime() {
     this.timeStop = true;
     this.timeStopCooldown = true;
-    this.stopTimer = 0;
+    this.stopTimer = Player.TIMESTOP_CD;
 
-    let cd = setInterval(()=>{this.stopTimer += 0.1}, 100);
+    this.stopInt = setInterval(()=>{this.stopTimer -= 0.1}, 100);
 
     setTimeout(() => {
       this.timeStop = false;
@@ -1887,7 +1891,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     setTimeout(() => {
       this.timeStopCooldown = false;
-      clearInterval(cd);
+      // clearInterval(cd);
     }, Player.TIMESTOP_CD*1000);
   }
 
@@ -1915,36 +1919,49 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     ctx.fillRect(box4[0] + 3, box4[1], Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
     ctx.fillRect(box5[0] + 4, box5[1], Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
 
-    if(this.lightTimer < Player.LIGHT_CD - 0.01) {
+    if(this.lightTimer > 0) {
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(box2[0] + Player.HUD_ICON_SIZE/2 + 1, box2[1] + Player.HUD_ICON_SIZE/2);
-      ctx.arc(box2[0] + Player.HUD_ICON_SIZE/2 + 1, box2[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.lightTimer)/Player.LIGHT_CD);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillRect(box2[0], box2[1] + this.lightTimer*100/Player.LIGHT_CD, Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
+      // ctx.beginPath();
+      // ctx.moveTo(box2[0] + Player.HUD_ICON_SIZE/2 + 1, box2[1] + Player.HUD_ICON_SIZE/2);
+      // ctx.arc(box2[0] + Player.HUD_ICON_SIZE/2 + 1, box2[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.lightTimer)/Player.LIGHT_CD);
+      // ctx.closePath();
+      // ctx.fill();
+    } else {
+      if(this.lightInt) {
+        clearInterval(this.lightInt);
+      }
     }
 
-    if(this.stopTimer < Player.TIMESTOP_CD - 0.3) {
+    if(this.stopTimer > 0) {
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(box3[0] + Player.HUD_ICON_SIZE/2 + 2, box3[1] + Player.HUD_ICON_SIZE/2);
-      ctx.arc(box3[0] + Player.HUD_ICON_SIZE/2 + 2, box3[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.stopTimer)/Player.TIMESTOP_CD);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillRect(box3[0] + 2, box3[1] + this.stopTimer*100/Player.TIMESTOP_CD, Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
+      // ctx.beginPath();
+      // ctx.moveTo(box3[0] + Player.HUD_ICON_SIZE/2 + 2, box3[1] + Player.HUD_ICON_SIZE/2);
+      // ctx.arc(box3[0] + Player.HUD_ICON_SIZE/2 + 2, box3[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.stopTimer)/Player.TIMESTOP_CD);
+      // ctx.closePath();
+      // ctx.fill();
+    } else {
+      if(this.stopInt) {
+        clearInterval(this.stopInt);
+      }
     }
 
-    if(this.portalTimer < Player.PORTAL_CD - 0.3) {
+    if(this.portalTimer > 0 ) {
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(box4[0] + Player.HUD_ICON_SIZE/2 + 3, box4[1] + Player.HUD_ICON_SIZE/2);
-      ctx.arc(box4[0] + Player.HUD_ICON_SIZE/2 + 3, box4[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.portalTimer)/Player.PORTAL_CD);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillRect(box4[0] + 3, box4[1] + this.portalTimer*100/Player.PORTAL_CD, Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
+
+      // ctx.beginPath();
+      // ctx.moveTo(box4[0] + Player.HUD_ICON_SIZE/2 + 3, box4[1] + Player.HUD_ICON_SIZE/2);
+      // ctx.arc(box4[0] + Player.HUD_ICON_SIZE/2 + 3, box4[1] + Player.HUD_ICON_SIZE/2, Player.HUD_ICON_SIZE/2, 0, (2 * Math.PI * this.portalTimer)/Player.PORTAL_CD);
+      // ctx.closePath();
+      // ctx.fill();
+    } else {
+      if(this.portalInt) {
+        clearInterval(this.portalInt);
+      }
     }
     
-    
-
-
   }
 
 
