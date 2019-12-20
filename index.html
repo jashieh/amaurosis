@@ -1,53 +1,114 @@
 <html>
-  <head>
-    <title>JS Project</title>
-    <link href="./css/style.css" rel="stylesheet">
-  </head>
-  
-  <body style="margin: 0">
-    <div id="game">
-      <canvas id="game-canvas"></canvas>
-      <div id="splash">
-        <div id="start-screen" class="splash-page">
-          <div class="title">
-            Unsighted
-          </div>
-          <div id="start-button">
-            Press spacebar to start
-          </div>
-          <div class="footer">
-            <a href="" target="_blank">
-              <img src="./sprites/splash/github.png" alt="">
-              GitHub
-            </a>
-            <a href="https://www.linkedin.com/in/shieh-justin/" target="_blank">
-              <img src="./sprites/splash/linkedin.png" alt="">
-              LinkedIn
-            </a>
-          </div>
+<head>
+  <title>JS Project</title>
+  <link href="./css/style.css" rel="stylesheet">
+</head>
+
+<body style="margin: 0">
+  <div id="game">
+    <canvas id="game-canvas"></canvas>
+    <div id="splash">
+      <div id="start-screen" class="splash-page">
+        <div class="title">
+          Unsighted
         </div>
-
-        <div id="instructions" class="splash-page">
-          <div class="title">
-            HOW TO PLAY 
-          </div>
-          <div>
-            <div>
-              WASD to move
-            </div>
-            <div>
-
-            </div>
-          </div>
-
+        <div id="start-button">
+          Press spacebar to start
         </div>
-        <div id="new-level">
-
+        <div class="footer">
+          <a href="" target="_blank">
+            <img src="./sprites/splash/github.png" alt="" class="link-img">
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/shieh-justin/" target="_blank">
+            <img src="./sprites/splash/linkedin.png" alt="" class="link-img">
+            LinkedIn
+          </a>
         </div>
       </div>
+      
+      <div id="instructions" class="splash-page">
+        <div class="title">
+          HOW TO PLAY 
+        </div>
+        
+        <div class="instruction-list">
+          <div class="instructions-left">
+            <div class="instruction-li">
+              <img src="./sprites/splash/steps.gif" alt="" class="instructions-img">
+              <div class="instruction-key">
+                WASD
+              </div>
+              <div class="instruction-detail">
+                Move 
+              </div>
+            </div>
+            
+            <div class="instruction-li">
+              <img src="./sprites/splash/laser.gif" alt="" class="instructions-img">
+              <div class="instruction-key">
+                Left Click
+              </div>
+              <div class="instruction-detail">
+                Fire energy blast
+              </div>
+            </div>
+            
+            <div class="instruction-li">
+              <img src="./sprites/splash/light.jpg" alt="" class="instructions-img fade">
+              <div class="instruction-key">
+                Spacebar
+              </div>
+              <div class="instruction-detail">
+                Shine light
+              </div>
+            </div>
+          </div>
+          
+          <div class="instructions-right">
+            <div class="instruction-li">
+              <img src="./sprites/splash/portal.gif" alt="" class="instructions-img">
+              <div class="instruction-key">
+                E Key
+              </div>
+              <div class="instruction-detail">
+                Fire Portal Gun. Fire twice to connect portals
+              </div>
+            </div>
+            
+            <div class="instruction-li">
+              <img src="./sprites/splash/shield2.gif" alt="" class="instructions-img">
+              <div class="instruction-key">
+                F Key
+              </div>
+              <div class="instruction-detail">
+                Raise Shield. Cannot perform other actions while shielding
+              </div>
+            </div>
+            <div class="instruction-li">
+              <img src="./sprites/splash/stopwatch.gif" alt="" class="instructions-img">
+              <div class="instruction-key">
+                R Key
+              </div>
+              <div class="instruction-detail">
+                Stop Time for 1 second
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="continue-button">
+          Press spacebar to continue
+        </div>
+        
+      </div>
+      
+      <div id="new-level">
+        <div class="current-level"></div>
+      </div>
     </div>
-    
-    <script type="application/javascript" src="./vendor/keymaster.js"></script>
-    <script type="application/javascript" src="./dist/main.js"></script>
-  </body>
+  </div>
+  
+  <script type="application/javascript" src="./vendor/keymaster.js"></script>
+  <script type="application/javascript" src="./dist/main.js"></script>
+</body>
 </html>
