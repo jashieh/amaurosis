@@ -218,7 +218,7 @@ class Bullet extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 Bullet.RADIUS = 3;
 Bullet.SPEED = 10;
-Bullet.LIFESPAN = 3;
+Bullet.LIFESPAN = 2;
 Bullet.MAX = 15;
 
 /* harmony default export */ __webpack_exports__["default"] = (Bullet);
@@ -800,6 +800,7 @@ class Game {
           let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
             pos: enemies[j].pos,
             aggro: enemies[j].aggro,
+            health: enemies[j].health,
             game: this,
           });
           this.add(hive);
@@ -1056,8 +1057,8 @@ Game.BG_COLOR = "#000000";
 Game.DIM_X = 5000;
 Game.DIM_Y = 5000;
 
-// Game.VIEW_X = 1000;
-// Game.VIEW_Y = 600;
+// Game.VIEW_X = 500;
+// Game.VIEW_Y = 500;
 
 Game.VIEW_X = window.innerWidth;
 Game.VIEW_Y = window.innerHeight;
@@ -1109,7 +1110,7 @@ class GameView {
 
   nextLevel() {
     this.level++;
-    if(this.level > 3) {
+    if(this.level > 5) {
       this.splash = true;
       document.querySelector('.current-level').innerHTML = `You Win`;
       this.splashEle.style.visibility = "visible";
@@ -1160,13 +1161,13 @@ class GameView {
 
     document.addEventListener("mousedown",() => {
       if(this.player.shieldHealth < 0.01 || !this.player.shielding && 
-        !this.player.reloading && !this.splash) {
+        !this.player.reloading && !this.splash && !this.player.timeStop) {
         this.player.fireBullet("bullet");
       }
     });
 
     key("e", () => { 
-      if(!this.player.portalCooldown && !this.splash)
+      if(!this.player.portalCooldown && !this.splash && !this.player.timeStop)
         this.player.fireBullet("portal"); 
     });
 
@@ -1185,7 +1186,7 @@ class GameView {
     });
 
     key("space", () => { 
-      if(!this.player.lightCooldown && !this.splash) {
+      if(!this.player.lightCooldown && !this.splash && !this.player.timeStop) {
         this.player.shineLight(); 
       }
       if(this.startScreen) {
@@ -1327,10 +1328,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.canvas = canvasEl;
   window.rect = canvasEl.getBoundingClientRect();
 
-  // window.game = game;
-
-  gameView = new _game_view__WEBPACK_IMPORTED_MODULE_1__["default"](ctx).start();
-
+  window.game = new _game_view__WEBPACK_IMPORTED_MODULE_1__["default"](ctx).start();
 });
 
 
@@ -1434,7 +1432,10 @@ const levels = {
   3: {
     walls: [
       { topLeft: [0, 0],
-        bottomRight: [1500, 50],
+        bottomRight: [450, 50],
+      },
+      { topLeft: [550, 0],
+        bottomRight: [1000, 50],
       },
       { topLeft: [0, 0],
         bottomRight: [50, 1500],
@@ -1463,8 +1464,11 @@ const levels = {
       { topLeft: [950, 0],
         bottomRight: [1000, 800],
       },
-      { topLeft: [950, 0],
-        bottomRight: [1000, 800],
+      { topLeft: [550, 400],
+        bottomRight: [800, 450],
+      },
+      { topLeft: [700, 200],
+        bottomRight: [1000, 250],
       },
     ],
     portals: [
@@ -1474,17 +1478,112 @@ const levels = {
     ],
     enemies: [
       { pos: [100, 100], aggro: true},
-      { pos: [500, 1000], aggro: true},
-      // { pos: [800, 1300], aggro: true},
-      // { pos: [300, 900], aggro: true},
+      { pos: [500, 1000], aggro: true, health: 3},
+      { pos: [800, 1300], aggro: true, health: 3},
+      { pos: [300, 900], aggro: true, health: 3},
 
     ],
     start: [100, 500],
-    goal: { topLeft: [1180, 0],
-      bottomRight: [1200, 100],
+    goal: { topLeft: [450, 0],
+      bottomRight: [550, 30],
+    },
+    name: "The Encounter",
+    text1: "You hear footsteps creeping towards you in the distance. Something is out there with you in the darkness...",
+    text2: "Best find something to protect yourself with"
+  },
+
+  4: {
+    walls: [
+      { topLeft: [0, 0],
+        bottomRight: [450, 350],
+      },
+      { topLeft: [0, 0],
+        bottomRight: [1000, 50],
+      },
+      { topLeft: [550, 0],
+        bottomRight: [1000, 350],
+      },
+      { topLeft: [750, 350],
+        bottomRight: [1000, 450],
+      },
+      { topLeft: [300, 450],
+        bottomRight: [1000, 550],
+      },
+      { topLeft: [0, 450],
+        bottomRight: [50, 550],
+      },
+      { topLeft: [0, 350],
+        bottomRight: [200, 450],
+      },
+      { topLeft: [0, 550],
+        bottomRight: [200, 800],
+      },
+      { topLeft: [0, 700],
+        bottomRight: [500, 800],
+      },
+      { topLeft: [450, 900],
+        bottomRight: [500, 1500],
+      },
+      { topLeft: [450, 1250],
+        bottomRight: [1200, 1300],
+      },
+      { topLeft: [1150, 150],
+        bottomRight: [1200, 1300],
+      },
+      { topLeft: [900, 800],
+        bottomRight: [925, 1150],
+      },
+
+      { topLeft: [700, 650],
+        bottomRight: [1500, 700],
+      },
+      { topLeft: [0, 650],
+        bottomRight: [50, 1500],
+      },
+      { topLeft: [0, 1450],
+        bottomRight: [500, 1500],
+      },
+      { topLeft: [0, 900],
+        bottomRight: [300, 950],
+      },
+      { topLeft: [280, 900],
+        bottomRight: [300, 1200],
+      },
+      { topLeft: [150, 1180],
+        bottomRight: [300, 1200],
+      },
+      { topLeft: [250, 1350],
+        bottomRight: [300, 1500],
+      },
+      { topLeft: [800, 0],
+        bottomRight: [1500, 50],
+      },
+      { topLeft: [1450, 0],
+        bottomRight: [1500, 500],
+      },
+      { topLeft: [1300, 200],
+        bottomRight: [1350, 700],
+      },
+    ],
+
+
+    enemies: [
+      { pos: [ 800, 1100]},
+      { pos: [ 1000, 800], health: 10},
+      { pos: [ 1000, 600], health: 5},
+      { pos: [ 100, 1000]},
+      { pos: [ 1400, 200], health: 15}
+
+    ],
+    start: [500, 200],
+    goal: {
+      topLeft: [1480, 500],
+      bottomRight: [1500, 700],
     },
 
-    name: "xd"
+    name: "The darkness has eyes",
+    text1: "The monsters seem to be attracted to the light and the sound of gunfire.",
+    text2: "Best get used to the blackout and stay as quiet as possible..."
   }
 };
 
@@ -1886,10 +1985,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       });
       
       this.game.add(bullet);
-      // this.reloading = true;
-      // setTimeout(() => {
-      //   this.reloading = false;
-      // }, 150);
+      this.reloading = true;
+      setTimeout(() => {
+        this.reloading = false;
+      }, 200);
       // this.bullets--;
       // console.log(`Ammo: ${this.bullets}`);
       
@@ -2063,7 +2162,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     ctx.fillText("Shield", box5[0] + 35, box5[1] + 93);
     
     ctx.fillStyle = "red";
-    ctx.fillRect(box1[0], box1[1] - 25, 500*this.health/10, 20);
+    ctx.fillRect(box1[0], box1[1] - 25, 500*this.health/Player.MAX_HEALTH, 20);
       
     ctx.fillStyle = "#ffffff";
     
@@ -2196,7 +2295,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 const sideMove = Math.sqrt(2)/2;
 
 Player.MAX_BULLETS = 12;
-Player.MAX_HEALTH = 10;
+Player.MAX_HEALTH = 6;
 Player.MIN_SHIELD = 0;
 Player.MAX_SHIELD = 10;
 Player.SHIELD_RADIUS = 1;
