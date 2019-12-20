@@ -407,6 +407,9 @@ __webpack_require__.r(__webpack_exports__);
 class ChaserHive extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
     super(options);
+      if(options.aggro) {
+        this.activate();
+      }
     this.color = options.color || "#000000";
     this.aggro = options.aggro || false;
     this.player = options.player;
@@ -802,6 +805,28 @@ class Game {
           this.add(hive);
         }
       }
+
+      let portals = this.level.portals;
+      if(this.level.portals) {
+        for(let k = 0; k < portals.length; k++) {
+          let portal1 = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
+            pos: portals[k][0].pos,
+            dir: portals[k][0].dir,
+            game: this,
+          });
+          let portal2 = new _portal__WEBPACK_IMPORTED_MODULE_3__["default"]({
+            pos: portals[k][1].pos,
+            dir: portals[k][1].dir,
+            game: this,
+          });
+
+          portal1.connect(portal2);
+          portal2.connect(portal1);
+          
+          this.add(portal1);
+          this.add(portal2);
+        }
+      }
   
     }
 
@@ -1084,6 +1109,12 @@ class GameView {
 
   nextLevel() {
     this.level++;
+    if(this.level > 3) {
+      this.splash = true;
+      document.querySelector('.current-level').innerHTML = `You Win`;
+      this.splashEle.style.visibility = "visible";
+      return;
+    }
     this.startLevel();
     this.splash = true;
     this.splashEle.style.visibility = "visible";
@@ -1169,6 +1200,9 @@ class GameView {
       } else if(this.splash) {
         document.getElementById("game-canvas").style.visibility = "visible";
         document.querySelector('.current-level').innerHTML = "";
+        document.querySelector('.level-text-1').innerHTML = "";
+        document.querySelector('.level-text-2').innerHTML = "";
+
         this.splashEle.style.visibility = "hidden";
         this.splash = false;
       }
@@ -1318,12 +1352,12 @@ const levels = {
   1: {
     walls: [
       { topLeft: [0, 500],
-        bottomRight: [50, 600],
+        bottomRight: [50, 700],
       },
       { topLeft: [0,0],
         bottomRight: [500, 500],
       },
-      { topLeft: [0, 600],
+      { topLeft: [0, 700],
         bottomRight: [1000, 1200],
       },
       { topLeft: [600, 0],
@@ -1331,38 +1365,127 @@ const levels = {
       },
     ],
     goal: { topLeft: [500, 0],
-      bottomRight: [600, 100],
+      bottomRight: [600, 20],
     },
-    start: [100, 550],
-    enemies: [
-      { pos: [400, 550] }
-    ],
+    start: [100, 600],
     name: "Into Darkness",
-    text1: "test1",
-    text2: "test2",
-
+    text1: "\"Where am I...\"",
+    text2: "You wake up shrouded in complete darkness. The quiet ringing of an alarm can be heard far away. Luckily you have your trusty flashlight with you to illuminate the way..."
   },
 
   2: {
     walls: [
       { topLeft: [0, 500],
-        bottomRight: [50, 600],
+        bottomRight: [50, 1000],
+      },
+      { topLeft: [200, 500],
+        bottomRight: [250, 800],
+      },
+      { topLeft: [0, 950],
+        bottomRight: [800, 1000],
+      },
+      { topLeft: [400, 500],
+        bottomRight: [700, 1000],
+      },
+      { topLeft: [250, 700],
+        bottomRight: [325, 750],
       },
       { topLeft: [0,0],
-        bottomRight: [500, 500],
+        bottomRight: [700, 500],
       },
-      { topLeft: [0, 600],
-        bottomRight: [1000, 1200],
+
+      { topLeft: [0,0],
+        bottomRight: [700, 500],
+      },
+      { topLeft: [700, 550],
+        bottomRight: [1200, 600],
+      },
+      { topLeft: [1100, 300],
+        bottomRight: [1200, 550],
+      },
+      { topLeft: [700, 0],
+        bottomRight: [1200, 50],
+      },
+      { topLeft: [900, 0],
+        bottomRight: [950, 200],
+      },
+      { topLeft: [800, 200],
+        bottomRight: [1050, 250],
+      },
+      { topLeft: [1150, 100],
+        bottomRight: [1200, 400],
+      },
+
+    ],
+    goal: { topLeft: [1180, 0],
+      bottomRight: [1200, 100],
+    },
+    portals: [
+      { 0: { pos: [400, 550], dir: "left"},
+        1: { pos: [1000, 550], dir: "up"}
+      }
+    ],
+
+    start: [100, 550],
+    name: "Connected",
+    text1: "You see a glowing blue light at the end of the hallway. It becons you towards it..."
+  },
+
+  3: {
+    walls: [
+      { topLeft: [0, 0],
+        bottomRight: [1500, 50],
+      },
+      { topLeft: [0, 0],
+        bottomRight: [50, 1500],
+      },
+      { topLeft: [0, 500],
+        bottomRight: [50, 1000],
+      },
+      { topLeft: [0, 500],
+        bottomRight: [50, 1000],
+      },
+      { topLeft: [0, 400],
+        bottomRight: [600, 450],
+      },
+      { topLeft: [550, 0],
+        bottomRight: [600, 450],
+      },
+      { topLeft: [0, 700],
+        bottomRight: [1000, 750],
+      },
+      { topLeft: [950, 700],
+        bottomRight: [1000, 1500],
+      },
+      { topLeft: [0, 1450],
+        bottomRight: [1000, 1500],
+      },
+      { topLeft: [950, 0],
+        bottomRight: [1000, 800],
+      },
+      { topLeft: [950, 0],
+        bottomRight: [1000, 800],
       },
     ],
-    goal: { topLeft: [500, 0],
-      bottomRight: [600, 100],
-    },
-    start: [100, 550],
+    portals: [
+      { 0: { pos: [50, 100], dir: "right"},
+        1: { pos: [550, 450], dir: "down"},
+      }
+    ],
     enemies: [
-      [400, 550]
-    ]
-  },
+      { pos: [100, 100], aggro: true},
+      { pos: [500, 1000], aggro: true},
+      // { pos: [800, 1300], aggro: true},
+      // { pos: [300, 900], aggro: true},
+
+    ],
+    start: [100, 500],
+    goal: { topLeft: [1180, 0],
+      bottomRight: [1200, 100],
+    },
+
+    name: "xd"
+  }
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (levels);
@@ -2088,7 +2211,7 @@ Player.TIMESTOP_CD = 5;
 Player.HUD_ICON_SIZE = 100;
 
 
-Player.SPEED = 3;
+Player.SPEED = 10;
 Player.MOVES = {
   w: [0, -1],
   a: [-1, 0],

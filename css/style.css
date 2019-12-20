@@ -200,6 +200,7 @@ a {
 .level-text-1 {
   display: flex;
   justify-content: center;
+  margin-bottom: 20px;
 }
 
 .level-text-2 {
