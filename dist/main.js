@@ -1886,6 +1886,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.shieldHUD = new Image();
     this.shieldHUD.src = "./sprites/player/shield.png";
     
+    this.collision = false;
     this.updateCursorPostion();
 
     this.moving = false;
@@ -1927,7 +1928,10 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       || this.game.wallCollision(botLeft)
       || this.game.wallCollision(topRight)
       || this.game.wallCollision(botRight)) {
+        this.collision = true;
       return;
+    } else {
+      this.collision = false;
     }
 
     this.cursorPostion[0] += newX - this.pos[0];
@@ -2249,7 +2253,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
       sy = 3*48;
     }
 
-    if(!this.moving) {
+    if(!this.moving || this.collision) {
       sx = 0;
     }
 
@@ -2310,7 +2314,7 @@ Player.TIMESTOP_CD = 5;
 Player.HUD_ICON_SIZE = 100;
 
 
-Player.SPEED = 10;
+Player.SPEED = 5;
 Player.MOVES = {
   w: [0, -1],
   a: [-1, 0],
@@ -2583,30 +2587,30 @@ Portal.BLUE = [
 ];
 
 Portal.PINK = [
-  "./sprites/pink_portal/__pink_portal_effect_large_000.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_001.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_002.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_003.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_004.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_005.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_006.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_007.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_008.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_009.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_010.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_011.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_012.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_013.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_014.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_015.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_016.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_017.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_018.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_019.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_020.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_021.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_022.png",
-  "./sprites/pink_portal/__pink_portal_effect_large_023.png"
+  "./sprites/pink/pink0.png",
+  "./sprites/pink/pink1.png",
+  "./sprites/pink/pink2.png",
+  "./sprites/pink/pink3.png",
+  "./sprites/pink/pink4.png",
+  "./sprites/pink/pink5.png",
+  "./sprites/pink/pink6.png",
+  "./sprites/pink/pink7.png",
+  "./sprites/pink/pink8.png",
+  "./sprites/pink/pink9.png",
+  "./sprites/pink/pink10.png",
+  "./sprites/pink/pink11.png",
+  "./sprites/pink/pink12.png",
+  "./sprites/pink/pink13.png",
+  "./sprites/pink/pink14.png",
+  "./sprites/pink/pink15.png",
+  "./sprites/pink/pink16.png",
+  "./sprites/pink/pink17.png",
+  "./sprites/pink/pink18.png",
+  "./sprites/pink/pink19.png",
+  "./sprites/pink/pink20.png",
+  "./sprites/pink/pink21.png",
+  "./sprites/pink/pink22.png",
+  "./sprites/pink/pink23.png"
 ];
 
 /* harmony default export */ __webpack_exports__["default"] = (Portal);
@@ -2746,7 +2750,7 @@ class StaticObject {
     this.bottomRight = options.bottomRight;
     this.width = this.bottomRight[0] - this.topLeft[0];
     this.height = this.bottomRight[1] - this.topLeft[1];
-    this.color =  options.color || "#ffffff";
+    this.color =  options.color || "#000000"; // #ffffff
     this.game = options.game;
   }
 
