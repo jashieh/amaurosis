@@ -1876,7 +1876,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.sprite.src = "./sprites/player/cat.png";
 
     this.bulletHUD = new Image();
-    this.bulletHUD.src = "./sprites/player/crosshair.png";
+    this.bulletHUD.src = "./sprites/player/crosshair_test.png";
     this.lightHUD = new Image();
     this.lightHUD.src = "./sprites/player/flashlight.png";
     this.timeHUD = new Image();
