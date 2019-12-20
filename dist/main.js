@@ -2556,8 +2556,8 @@ Portal.WIDTH = 25;
 Portal.HEIGHT = 5;
 
 Portal.BLUE = [
-  "./sprites/blue_portal/__blue_portal_effect_large_000.png",
-  "./sprites/blue_portal/__blue_portal_effect_large_001.png",
+  "./sprites/blue_portal/blue_portal_effect_large_000.png",
+  "./sprites/blue_portal/blue_portal_effect_large_001.png",
   "./sprites/blue_portal/__blue_portal_effect_large_002.png",
   "./sprites/blue_portal/__blue_portal_effect_large_003.png",
   "./sprites/blue_portal/__blue_portal_effect_large_004.png",
