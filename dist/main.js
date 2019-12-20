@@ -1868,7 +1868,6 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     let box4 = [this.pos[0] - _game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X/2 + Player.HUD_ICON_SIZE*3, this.pos[1] + _game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_Y/2 - Player.HUD_ICON_SIZE];
     let box5 = [this.pos[0] - _game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_X/2 + Player.HUD_ICON_SIZE*4, this.pos[1] + _game__WEBPACK_IMPORTED_MODULE_6__["default"].VIEW_Y/2 - Player.HUD_ICON_SIZE];
 
-
     ctx.fillRect(box1[0], box1[1], Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
     ctx.fillRect(box2[0] + 1, box2[1], Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
     ctx.fillRect(box3[0] + 2, box3[1], Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
@@ -1906,10 +1905,18 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     ctx.fillText("Time Stop", box3[0] + 24, box3[1] + 93);
     ctx.fillText("Portal Gun", box4[0] + 24, box4[1] + 93);
     ctx.fillText("Shield", box5[0] + 35, box5[1] + 93);
-
     
+    ctx.fillStyle = "red";
+    ctx.fillRect(box1[0], box1[1] - 25, 500*this.health/10, 20);
+      
+    ctx.fillStyle = "#ffffff";
+    
+    ctx.fillText("Health", box1[0], box1[1] - 10);
 
     ctx.fillStyle = "rgba(95, 97, 94, 0.7)";
+
+
+
     if(this.lightTimer > 0) {
       ctx.fillRect(box2[0], box2[1] + this.lightTimer*100/Player.LIGHT_CD, Player.HUD_ICON_SIZE, Player.HUD_ICON_SIZE);
       // ctx.beginPath();
