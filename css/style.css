@@ -104,6 +104,7 @@ canvas {
 
 #start-button {
   font-size: 30px;
+  
   animation: blinker 3s linear infinite;
 }
 
@@ -175,12 +176,37 @@ a {
 .continue-button {
   margin-top: 5%;
   font-size: 20px;
+  display: flex;
+  justify-content: center;
   animation: blinker 3s linear infinite;
 }
 
 #new-level {
   display: none;
+  flex-direction: column;
+  justify-content: center;
+  width: 50%;
+  line-height: 1.5;
 }
+
+.current-level {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  margin-bottom: 30px;
+}
+
+.level-text-1 {
+  display: flex;
+  justify-content: center;
+}
+
+.level-text-2 {
+  display: flex;
+  justify-content: center;
+}
+
 
 .fade {
   animation: blinker 1s linear infinite;

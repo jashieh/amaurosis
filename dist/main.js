@@ -715,7 +715,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Game {
-  constructor(level, nextLevel) {
+  constructor(level, nextLevel, gameOver) {
     this.players = [];
     this.bullets = [];
     this.lights = [];
@@ -726,6 +726,7 @@ class Game {
     this.level = _levels__WEBPACK_IMPORTED_MODULE_9__["default"][level];
 
     this.nextLevel = nextLevel;
+    this.gameOver = gameOver;
 
     this.startLevel();
   }
@@ -794,7 +795,8 @@ class Game {
       if(this.level.enemies) {
         for(let j = 0; j < enemies.length; j++) {
           let hive = new _enemies_chaser_hive__WEBPACK_IMPORTED_MODULE_6__["default"]({
-            pos: enemies[j],
+            pos: enemies[j].pos,
+            aggro: enemies[j].aggro,
             game: this,
           });
           this.add(hive);
@@ -874,8 +876,6 @@ class Game {
       this.players[0].drawShield(ctx);
     }
 
-    // ctx.rotate(-0.7)
-    
     ctx.restore();
 
   }
@@ -996,7 +996,7 @@ class Game {
 
             obj1.health--;
             if(obj1.health <= 0) {
-              console.log("dead")
+              this.gameOver();
             }
             this.remove(obj2);
           }
@@ -1055,9 +1055,15 @@ Game.FPS = 32;
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _player__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./player */ "./lib/player.js");
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./game */ "./lib/game.js");
+/* harmony import */ var _levels__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./levels */ "./lib/levels.js");
 
 // import Camera from "./camera";
 
+
+
+const quotes = [
+  "\"Death is not a hunter unbeknownst to its prey, one is always aware that it lies in wait. Though life is merely a journey to the grave, it must not be undertaken without hope. Only then will a traveler's story live on, treasured by those who bid him farewell. But alas, now my guest's life has ended, his tale left unwritten...\""
+]
 
 class GameView {
   constructor(ctx) {
@@ -1066,27 +1072,48 @@ class GameView {
     this.level = 1;
     
     this.nextLevel = this.nextLevel.bind(this);
+    this.gameOver = this.gameOver.bind(this);
     
     this.startScreen = true;
     this.instructions = false;
     this.splash = true;
     this.splashEle = document.getElementById('splash');
     
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel);
-    this.player = this.game.addPlayer();
+    this.startLevel();
   }
 
   nextLevel() {
     this.level++;
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel);
-    this.player = this.game.addPlayer();
-
+    this.startLevel();
     this.splash = true;
     this.splashEle.style.visibility = "visible";
   }
 
+  startLevel() {
+    document.querySelector('.current-level').innerHTML = `LEVEL ${this.level}: ${_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].name}`;
+    if(_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text1) {
+      document.querySelector('.level-text-1').innerHTML = _levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text1;
+    }
+    if(_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text2) {
+      document.querySelector('.level-text-2').innerHTML = _levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text2;
+    }
+
+
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver);
+    this.player = this.game.addPlayer();
+  }
+
   gameOver() {
-    
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver);
+    this.player = this.game.addPlayer();
+
+    let idx = Math.floor(Math.random()) * quotes.length;
+
+    document.querySelector('.current-level').innerHTML = "GAME OVER";
+    document.querySelector('.level-text-1').innerHTML = quotes[idx];
+
+    this.splash = true;
+    this.splashEle.style.visibility = "visible";
   }
   
   // w = 87; d = 68; a = 65; s = 83;
@@ -1116,6 +1143,10 @@ class GameView {
       this.nextLevel();
     });
 
+    key("o", () => {
+      this.gameOver();
+    });
+
 
     key("r", () => { 
       if(!this.player.timeStopCooldown && !this.splash)
@@ -1135,11 +1166,9 @@ class GameView {
         this.instructions = false;
         document.getElementById("instructions").style.display = "none";
         document.getElementById("new-level").style.display = "flex";
-        
-        // this.splashEle.style.visibility = "hidden";
-        // this.splash = false;
       } else if(this.splash) {
         document.getElementById("game-canvas").style.visibility = "visible";
+        document.querySelector('.current-level').innerHTML = "";
         this.splashEle.style.visibility = "hidden";
         this.splash = false;
       }
@@ -1306,8 +1335,12 @@ const levels = {
     },
     start: [100, 550],
     enemies: [
-      [400, 550]
-    ]
+      { pos: [400, 550] }
+    ],
+    name: "Into Darkness",
+    text1: "test1",
+    text2: "test2",
+
   },
 
   2: {
@@ -1913,7 +1946,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     
     ctx.fillText("Health", box1[0], box1[1] - 10);
 
-    ctx.fillStyle = "rgba(95, 97, 94, 0.7)";
+    ctx.fillStyle = "rgba(222, 222, 222, 0.7)";
 
 
 
