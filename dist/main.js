@@ -890,6 +890,10 @@ class Game {
       ctx.fillRect(this.players[0].pos[0] - 100, this.players[0].pos[1] - 50, progress/1000*200,10);
     }
 
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`PRESS 'P' TO SKIP TO THE NEXT LEVEL`, this.players[0].pos[0] - Game.VIEW_X/2 + 10, this.players[0].pos[1] - Game.VIEW_Y/2 + 20);
+
+
     if(this.currentLevel === 5) {
       ctx.fillStyle = "#ffffff";
 
@@ -1258,19 +1262,14 @@ class GameView {
     });
 
     key("p", () => {
-      if(this.level <= 5) {
+      if(this.level < 5) {
         this.nextLevel();
+      } else {
+        this.startLevel();
+        this.splash = true;
+        this.splashEle.style.visibility = "visible";
       }
     });
-
-    key("o", () => {
-      this.gameOver();
-    });
-
-    key("u", () => {
-      this.winGame();
-    });
-
 
     key("r", () => { 
       if(!this.player.timeStopCooldown && !this.splash)
@@ -1309,8 +1308,6 @@ class GameView {
         document.querySelector('.level-text-2').innerHTML = "";
 
         if(this.level === 5) {
-          // clearInterval(this.gameInt);
-          // this.gameTimer = 0;
           this.gameInt = setInterval(()=>{this.gameTimer += 1}, 1000);
         }
 
