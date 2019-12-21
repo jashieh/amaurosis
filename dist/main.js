@@ -1168,7 +1168,11 @@ class GameView {
   }
 
   startLevel() {
-    document.querySelector('.current-level').innerHTML = `LEVEL ${this.level}: ${_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].name}`;
+    if(this.level === 5) {
+      document.querySelector('.current-level').innerHTML = `LEVEL FINAL: ${_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].name}`;
+    } else {
+      document.querySelector('.current-level').innerHTML = `LEVEL ${this.level}: ${_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].name}`;
+    }
     if(_levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text1) {
       document.querySelector('.level-text-1').innerHTML = _levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text1;
     }
@@ -1267,12 +1271,14 @@ class GameView {
     });
 
     key("p", () => {
-      if(this.level < 5) {
-        this.nextLevel();
-      } else {
-        this.startLevel();
-        this.splash = true;
-        this.splashEle.style.visibility = "visible";
+      if(!this.instructions && !this.startScreen && !this.winScreen && !this.endScreen) {
+        if(this.level < 5) {
+          this.nextLevel();
+        } else {
+          this.startLevel();
+          this.splash = true;
+          this.splashEle.style.visibility = "visible";
+        }
       }
     });
 
@@ -1753,7 +1759,7 @@ const levels = {
       { pos: [ 1900, 1200]},
     ],
     name: "No Escape",
-    text1: "As you progress onto the next floor, you cease hearing the echoes of your footsteps. Its as if you've stepped into a massive vaccum in empty space. You feel yourself beginning to suffocate. If you stay for more than 60 seconds, you will die.",
+    text1: "As you progress onto the next floor, you cease hearing the echoes of your footsteps. Its as if you've stepped into a massive vaccum in empty space. You feel yourself beginning to suffocate. If you stay for more than 60 seconds, you will CRASH.",
     text2: "[object Object]"
   }
 };

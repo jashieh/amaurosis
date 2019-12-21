@@ -76,7 +76,9 @@ canvas {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: url("../sprites/splash/background.jpg");
+  background: url("../sprites/splash/background3.jpg");
+  background-size: cover;
+  /* background-position: center; */
 }
 
 .splash-page {
@@ -99,7 +101,7 @@ canvas {
 } */
 
 .background {
-  background: url("../sprites/splash/background.jpg");
+  background: url("../sprites/splash/background2.jpg!d");
 }
 
 .title {
