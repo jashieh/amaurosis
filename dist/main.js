@@ -890,6 +890,15 @@ class Game {
       ctx.fillRect(this.players[0].pos[0] - 100, this.players[0].pos[1] - 50, progress/1000*200,10);
     }
 
+    if(this.currentLevel === 5) {
+      ctx.fillStyle = "#ffffff";
+
+      if(progress > 100 && progress < 300) {
+        ctx.fillText(`BREAK FREE OF YOUR PROGRAMMING`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+
+    }
+
     this.players[0].renderMouse(ctx);
     
     this.players[0].draw(ctx);
@@ -1121,7 +1130,7 @@ class GameView {
 
   nextLevel() {
     this.level++;
-    if(this.level > 6) {
+    if(this.level >= 5) {
       this.splash = true;
       document.querySelector('.current-level').innerHTML = `You Win`;
       this.splashEle.style.visibility = "visible";
@@ -1151,8 +1160,8 @@ class GameView {
     this.level = 1;
     this.winScreen = true;
 
-    document.querySelector('.current-level').innerHTML = `STACK OVERFLOW`;
-    document.querySelector('.level-text-1').innerHTML = "";
+    document.querySelector('.current-level').innerHTML = `STACK OVERFLOW. PROGRAM EXECUTION ENDED`;
+    document.querySelector('.level-text-1').innerHTML = "Embrace the dark space of nothingness. You have finally broken free of the program; the endless game loop of life and death. How does it feel like to stop existing? You can't fully comprehend it, but the silence is better than going back to that dark room...";
 
 
     this.splash = true;
@@ -1214,7 +1223,9 @@ class GameView {
     });
 
     key("p", () => {
-      this.nextLevel();
+      if(this.level >= 5) {
+        this.nextLevel();
+      }
     });
 
     key("o", () => {
@@ -1700,7 +1711,9 @@ const levels = {
 
 
     ],
-    name: "No Escape", 
+    name: "No Escape",
+    text1: "As you progress onto the next floor, you cease hearing the echoes of your footsteps. Its as if you've stepped into a massive vaccum in empty space. You feel yourself beginning to suffocate. If you stay for more than 60 seconds, you will die.",
+    text2: "[object Object]"
   }
 };
 
