@@ -2011,7 +2011,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const radius = 25;
+const radius = 30;
 
 class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
@@ -2044,7 +2044,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.cursorPostion = [0,0];
     
     this.sprite = new Image();
-    this.sprite.src = "./sprites/player/cat.png";
+    this.sprite.src = "./sprites/player/mech3.png";
 
     this.bulletHUD = new Image();
     this.bulletHUD.src = "./sprites/player/crosshair.png";
@@ -2406,41 +2406,68 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     let angle = this.mouseAngle()*180/Math.PI;
     let sx, sy;
+    let offsetY = 0;
 
+    // if(angle > -45 && angle < 45) {
+    //   sx = this.frame*48;
+    //   sy = 2*48;
+    // }
+    // else if(angle > 45 && angle < 135) {
+    //   sx = this.frame*48;
+    //   sy = 0;
+    // }
+    // else if(angle > 135 || angle < -135) {
+    //   sx = this.frame*48;
+    //   sy = 48;
+    // }
+    // else if(angle > -135 && angle < -45) {
+    //   sx = this.frame*48;
+    //   sy = 3*48;
+    // }
+
+    // if(!this.moving || this.collision) {
+    //   sx = 0;
+    // }
+
+    // ctx.rotate(this.mouseAngle());
+    
     if(angle > -45 && angle < 45) {
-      sx = this.frame*48;
-      sy = 2*48;
+      sx = this.frame*123;
+      sy = 2*123;
+      offsetY = -3;
     }
     else if(angle > 45 && angle < 135) {
-      sx = this.frame*48;
+      sx = this.frame*123;
       sy = 0;
+      offsetY = 5;
     }
     else if(angle > 135 || angle < -135) {
-      sx = this.frame*48;
-      sy = 48;
+      sx = this.frame*123;
+      sy = 123;
+      offsetY = 1;
     }
     else if(angle > -135 && angle < -45) {
-      sx = this.frame*48;
-      sy = 3*48;
+      sx = this.frame*123;
+      sy = 3*123;
+      offsetY = -5;
     }
 
     if(!this.moving || this.collision) {
       sx = 0;
     }
 
-    // ctx.rotate(this.mouseAngle());
-
-    // ctx.drawImage(this.sprite, 
-    //   0,0, 50, 50,
-    //   (this.pos[0]-20), (this.pos[1]-25),
-    //   50, 50
-    // );
 
     ctx.drawImage(this.sprite, 
-      sx,sy, 48, 48,
-      -16, -23,
-      35, 35
+      sx, sy + 40, 123, 123,
+      -52, -50 + offsetY,
+      100, 100
     );
+
+    // ctx.drawImage(this.sprite, 
+    //   sx,sy, 48, 48,
+    //   -16, -23,
+    //   35, 35
+    // );
 
     ctx.restore();
 
@@ -2456,7 +2483,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     ctx.stroke();
 
-    if(this.i % 8 === 0) {
+    if(this.i % 7 === 0) {
       this.frame++;
     }
 
