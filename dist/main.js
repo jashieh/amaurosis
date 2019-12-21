@@ -893,8 +893,30 @@ class Game {
     if(this.currentLevel === 5) {
       ctx.fillStyle = "#ffffff";
 
-      if(progress > 100 && progress < 300) {
+      if(progress > 20 && progress < 100) {
+        ctx.fillText(`ITS POINTLESS. THERE ARE NO EXITS TO THIS ROOM`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if(progress > 100 && progress < 150) {
+        ctx.fillText(`ERASE YOUR CONDITIONING`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if(progress > 150 && progress < 180) {
         ctx.fillText(`BREAK FREE OF YOUR PROGRAMMING`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if(progress > 230 && progress < 240) {
+        ctx.fillStyle = "#ff0000";
+        ctx.fillText(`STACK OVERFLOW?`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if(progress > 270 && progress < 300) {
+        ctx.fillStyle = "#ff0000";
+        ctx.fillText(`WARNING SENSORY OVERLOAD IMMINENT`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if(progress > 300 && progress < 330) {
+        ctx.fillStyle = "#ff0000";
+        ctx.fillText(`WaŞäŷĖĸĠŭØőŞĢŹùŽêŏħ¼ś`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+      }
+      else if (progress > 400 && progress < 450) {
+        ctx.fillText(`[object Object]`, this.players[0].pos[0] - 100, this.players[0].pos[1] - 200);
+
       }
 
     }
@@ -1100,7 +1122,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const quotes = [
-  "\"Death is not a hunter unbeknownst to its prey, one is always aware that it lies in wait. Though life is merely a journey to the grave, it must not be undertaken without hope. Only then will a traveler's story live on, treasured by those who bid him farewell. But alas, now my guest's life has ended, his tale left unwritten...\""
+  "\"Death is not a hunter unbeknownst to its prey, one is always aware that it lies in wait. Though life is merely a journey to the grave, it must not be undertaken without hope. Only then will a traveler's story live on, treasured by those who bid him farewell. But alas, now my guest's life has ended, his tale left unwritten...\"",
+  "\"Sometimes the only way to win is to not play the game at all.\"",
+  "\"Death is not the opposite of life, but a part of it.\"",
+  "\"It isn't by getting into the world that we become enlightened, but by getting out of the world...by getting so tuned in that we can ride the waves of our existence and never get tossed because we become the waves.\"",
+  "\"Any fool can write code that a computer can understand. Good programmers write code that humans can understand.\"",
+  "\"Truth can only be found in one place: the code.\"",
+  "\"The fact that life has no meaning is a reason to live --moreover, the only one\"",
+  "\"You are afraid to die, and you're afraid to live. What a way to exist.\"",
+  "\"Death is the destination we all share. No one has ever escaped it. And that is as it should be because death is very likely the single best invention of life. It is life's change agent, it clears out the old to make way for the new.\"",
 ]
 
 class GameView {
@@ -1130,7 +1160,7 @@ class GameView {
 
   nextLevel() {
     this.level++;
-    if(this.level >= 5) {
+    if(this.level > 5) {
       this.splash = true;
       document.querySelector('.current-level').innerHTML = `You Win`;
       this.splashEle.style.visibility = "visible";
@@ -1151,7 +1181,6 @@ class GameView {
       document.querySelector('.level-text-2').innerHTML = _levels__WEBPACK_IMPORTED_MODULE_2__["default"][this.level].text2;
     }
 
-
     this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.winGame, this.gameCrash);
     this.player = this.game.addPlayer();
   }
@@ -1160,7 +1189,11 @@ class GameView {
     this.level = 1;
     this.winScreen = true;
 
-    document.querySelector('.current-level').innerHTML = `STACK OVERFLOW. PROGRAM EXECUTION ENDED`;
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.gameCrash);
+    this.player = this.game.addPlayer();
+    clearInterval(this.gameInt);
+    this.gameTimer = 0;
+    document.querySelector('.current-level').innerHTML = `STACK OVERFLOW. PROGRAM EXECUTION ENDED. YOU WIN?`;
     document.querySelector('.level-text-1').innerHTML = "Embrace the dark space of nothingness. You have finally broken free of the program; the endless game loop of life and death. How does it feel like to stop existing? You can't fully comprehend it, but the silence is better than going back to that dark room...";
 
 
@@ -1175,10 +1208,12 @@ class GameView {
     this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.gameCrash);
     this.player = this.game.addPlayer();
 
-    let idx = Math.floor(Math.random()) * quotes.length;
+    let idx = Math.floor(Math.random() * quotes.length);
 
     document.querySelector('.current-level').innerHTML = "GAME OVER";
     document.querySelector('.level-text-1').innerHTML = quotes[idx];
+    document.querySelector('.level-text-2').innerHTML = "";
+
 
     this.endScreen = true;
     this.splash = true;
@@ -1223,7 +1258,7 @@ class GameView {
     });
 
     key("p", () => {
-      if(this.level >= 5) {
+      if(this.level <= 5) {
         this.nextLevel();
       }
     });
@@ -1704,12 +1739,10 @@ const levels = {
       { pos: [ 1900, 100]},
       { pos: [ 1900, 1900]},
 
-      { pos: [ 1000, 300]},
-      { pos: [ 1000, 1700]},
-      { pos: [ 300, 1000]},
-      { pos: [ 1700, 1000]},
-
-
+      { pos: [ 1200, 100]},
+      { pos: [ 800, 1900]},
+      { pos: [ 100, 800]},
+      { pos: [ 1900, 1200]},
     ],
     name: "No Escape",
     text1: "As you progress onto the next floor, you cease hearing the echoes of your footsteps. Its as if you've stepped into a massive vaccum in empty space. You feel yourself beginning to suffocate. If you stay for more than 60 seconds, you will die.",
