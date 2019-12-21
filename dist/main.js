@@ -881,7 +881,7 @@ class Game {
     
     
     let progress = this.allMovingObjects().length;
-    if(this.currentLevel === 5 && progress > 300) {      
+    if(progress > 300) {      
       ctx.fillStyle = "#ffffff";
       if(progress > 500) {
         ctx.fillStyle = "#ff0000";
@@ -1151,13 +1151,12 @@ class GameView {
     this.level = 1;
     this.winScreen = true;
 
-    document.querySelector('.current-level').innerHTML = `????`;
+    document.querySelector('.current-level').innerHTML = `STACK OVERFLOW`;
+    document.querySelector('.level-text-1').innerHTML = "";
+
+
     this.splash = true;
     this.splashEle.style.visibility = "visible";
-    
-    // this.game = new Game(this.level, this.nextLevel, this.gameOver, this.winGame, this.gameCrash);
-    // this.player = this.game.addPlayer();
-
   }
 
   gameOver() {
