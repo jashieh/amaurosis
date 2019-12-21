@@ -718,7 +718,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Game {
-  constructor(level, nextLevel, gameOver) {
+  constructor(level, nextLevel, gameOver, winGame, gameCrash) {
     this.players = [];
     this.bullets = [];
     this.lights = [];
@@ -727,9 +727,12 @@ class Game {
     this.enemies = [];
     this.goal = [];
     this.level = _levels__WEBPACK_IMPORTED_MODULE_9__["default"][level];
+    this.currentLevel = level;
 
     this.nextLevel = nextLevel;
     this.gameOver = gameOver;
+    this.winGame = winGame;
+    this.gameCrash = gameCrash;
 
     this.startLevel();
   }
@@ -830,28 +833,6 @@ class Game {
       }
   
     }
-
-
-    // let portal = new Portal({
-    //   pos: [275, 300],
-    //   direction: "horizontal",
-    //   game: this,
-    //   dir: "down"
-    // });
-
-    // let portal2 = new Portal({
-    //   pos: [125, 100],
-    //   direction: "horizontal",
-    //   game: this,
-    //   dir: "up"
-    // });
-    
-    // portal2.connect(portal);
-    // portal.connect(portal2);
-
-    // this.add(portal);
-    // this.add(portal2);
-
   }
 
   allMovingObjects() {
@@ -862,7 +843,7 @@ class Game {
     return [].concat(this.bullets, this.walls, this.portals, this.lights, this.enemies);
   }
 
-  draw(ctx, xView, yView) {
+  draw(ctx, xView, yView) {  
     ctx.save();
 
     if(this.players[0].portals.length === 2
@@ -872,28 +853,43 @@ class Game {
     } else if(this.players[0].portals.length > 2) {
       this.players[0].removePortals();
     }
-        
-  
-    this.wallCollision(this.players[0].pos);
+
+    
+    
+    // this.wallCollision(this.players[0].pos);
     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
     
+    
     ctx.fillRect(0, 0, xView, yView);
-
+    
     ctx.translate((xView/2 - this.players[0].pos[0]), (yView/2 - this.players[0].pos[1]))
     // ctx.clearRect(0, 0, xView, yView);
-
+    
     ctx.fillStyle = Game.BG_COLOR;
     
-    // ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
 
+    // ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    
     // ctx.translate(-this.players[0].pos[0],-this.players[0].pos[1])
     // ctx.restore();
-
+    
     
     
     this.allObjects().forEach(object => {
       object.draw(ctx);
     });
+    
+    
+    let progress = this.allMovingObjects().length;
+    if(this.currentLevel === 5 && progress > 300) {      
+      ctx.fillStyle = "#ffffff";
+      if(progress > 500) {
+        ctx.fillStyle = "#ff0000";
+      }
+      ctx.fillText(`Corruption Progress: ${Math.floor(progress/1000*100)}%`, this.players[0].pos[0] - 50, this.players[0].pos[1] - 60);
+      ctx.fillRect(this.players[0].pos[0] - 100, this.players[0].pos[1] - 50, progress/1000*200,10);
+    }
+
     this.players[0].renderMouse(ctx);
     
     this.players[0].draw(ctx);
@@ -907,7 +903,14 @@ class Game {
   }
 
   moveObjects(delta) {
-    this.allMovingObjects().forEach(object => {
+    let objs = this.allMovingObjects();
+    if(objs.length > 1000 && this.currentLevel === 5) {
+      this.winGame();
+    } else if (objs.length > 800 && this.currentLevel !== 5) {
+      this.gameCrash();
+    }
+
+    objs.forEach(object => {
       if(!(object instanceof _player__WEBPACK_IMPORTED_MODULE_0__["default"]))
         object.move(delta);
     });
@@ -1099,23 +1102,32 @@ class GameView {
     
     this.nextLevel = this.nextLevel.bind(this);
     this.gameOver = this.gameOver.bind(this);
+    this.winGame = this.winGame.bind(this);
+    this.gameCrash = this.gameCrash.bind(this);
     
     this.startScreen = true;
+    this.endScreen = false;
+    this.winScreen = false;
+    
     this.instructions = false;
     this.splash = true;
     this.splashEle = document.getElementById('splash');
+
+    this.gameTimer = 0;
+    this.gameInt = null;
     
     this.startLevel();
   }
 
   nextLevel() {
     this.level++;
-    if(this.level > 5) {
+    if(this.level > 6) {
       this.splash = true;
       document.querySelector('.current-level').innerHTML = `You Win`;
       this.splashEle.style.visibility = "visible";
       return;
     }
+    
     this.startLevel();
     this.splash = true;
     this.splashEle.style.visibility = "visible";
@@ -1131,12 +1143,28 @@ class GameView {
     }
 
 
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver);
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.winGame, this.gameCrash);
     this.player = this.game.addPlayer();
   }
 
+  winGame() {
+    this.level = 1;
+    this.winScreen = true;
+
+    document.querySelector('.current-level').innerHTML = `????`;
+    this.splash = true;
+    this.splashEle.style.visibility = "visible";
+    
+    // this.game = new Game(this.level, this.nextLevel, this.gameOver, this.winGame, this.gameCrash);
+    // this.player = this.game.addPlayer();
+
+  }
+
   gameOver() {
-    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver);
+    clearInterval(this.gameInt);
+    this.gameTimer = 0;
+
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.gameCrash);
     this.player = this.game.addPlayer();
 
     let idx = Math.floor(Math.random()) * quotes.length;
@@ -1144,6 +1172,21 @@ class GameView {
     document.querySelector('.current-level').innerHTML = "GAME OVER";
     document.querySelector('.level-text-1').innerHTML = quotes[idx];
 
+    this.endScreen = true;
+    this.splash = true;
+    this.splashEle.style.visibility = "visible";
+  }
+
+  gameCrash() {
+    this.game = new _game__WEBPACK_IMPORTED_MODULE_1__["default"](this.level, this.nextLevel, this.gameOver, this.gameCrash);
+    this.player = this.game.addPlayer();
+
+    document.querySelector('.current-level').innerHTML = "WARNING! WARNING! OVERFLOW IMMINENT";
+    document.querySelector('.level-text-1').innerHTML = "The overwhelming cries of the monsters have caused your onboard sensors to overload.";
+    document.querySelector('.level-text-2').innerHTML = "Triggering too many monsters will result in your freedom through death.";
+
+
+    this.endScreen = true;
     this.splash = true;
     this.splashEle.style.visibility = "visible";
   }
@@ -1179,16 +1222,17 @@ class GameView {
       this.gameOver();
     });
 
+    key("u", () => {
+      this.winGame();
+    });
+
 
     key("r", () => { 
       if(!this.player.timeStopCooldown && !this.splash)
         this.player.stopTime(); 
     });
 
-    key("space", () => { 
-      if(!this.player.lightCooldown && !this.splash && !this.player.timeStop) {
-        this.player.shineLight(); 
-      }
+    key("enter", () => {
       if(this.startScreen) {
         this.startScreen = false;
         this.instructions = true;
@@ -1198,14 +1242,41 @@ class GameView {
         this.instructions = false;
         document.getElementById("instructions").style.display = "none";
         document.getElementById("new-level").style.display = "flex";
-      } else if(this.splash) {
+      } 
+      else if(this.endScreen) {
+        this.endScreen = false;
+        document.querySelector('.current-level').innerHTML = "";
+        document.querySelector('.level-text-1').innerHTML = "";
+        document.querySelector('.level-text-2').innerHTML = "";
+        this.startLevel();
+      }
+      else if(this.winScreen) {
+        this.startScreen = true;
+        this.winScreen = false;
+        document.getElementById("new-level").style.display = "none";
+        document.getElementById("start-screen").style.display = "flex";
+        this.startLevel();
+      }
+      else if(this.splash) {
         document.getElementById("game-canvas").style.visibility = "visible";
         document.querySelector('.current-level').innerHTML = "";
         document.querySelector('.level-text-1').innerHTML = "";
         document.querySelector('.level-text-2').innerHTML = "";
 
+        if(this.level === 5) {
+          // clearInterval(this.gameInt);
+          // this.gameTimer = 0;
+          this.gameInt = setInterval(()=>{this.gameTimer += 1}, 1000);
+        }
+
         this.splashEle.style.visibility = "hidden";
         this.splash = false;
+      }
+    });
+
+    key("space", () => { 
+      if(!this.player.lightCooldown && !this.splash && !this.player.timeStop) {
+        this.player.shineLight(); 
       }
     });
 
@@ -1279,6 +1350,12 @@ class GameView {
     this.game.step(timeDelta);
 
     // this.camera.update();
+
+    if(this.gameTimer > 60 && this.level === 5) {
+      // clearInterval(this.gameInt);
+      // this.gameTimer = 0;
+      this.gameOver();
+    }
     
     this.game.draw(this.ctx, _game__WEBPACK_IMPORTED_MODULE_1__["default"].VIEW_X, _game__WEBPACK_IMPORTED_MODULE_1__["default"].VIEW_Y);
     this.lastTime = time;
@@ -1368,7 +1445,7 @@ const levels = {
     start: [100, 600],
     name: "Into Darkness",
     text1: "\"Where am I...\"",
-    text2: "You wake up shrouded in complete darkness. The quiet ringing of an alarm can be heard far away. Luckily you have your trusty flashlight with you to illuminate the way..."
+    text2: "You wake up shrouded in complete darkness. Somehow you feel like you're forgetting something important. The quiet ringing of an alarm can be heard far away, signaling you to get out. Luckily you have your trusty flashlight with you to illuminate the way..."
   },
 
   2: {
@@ -1426,7 +1503,8 @@ const levels = {
 
     start: [100, 550],
     name: "Connected",
-    text1: "You see a glowing blue light at the end of the hallway. It becons you towards it..."
+    text1: "You see a glowing blue light at the end of the hallway. It becons you towards it, calling out to you as if you were PROGRAMMED to follow the light",
+    text2: "Press the E key to fire your portal gun. Pressing E a second time will connect the two portals together"
   },
 
   3: {
@@ -1488,8 +1566,8 @@ const levels = {
       bottomRight: [550, 30],
     },
     name: "The Encounter",
-    text1: "You hear footsteps creeping towards you in the distance. Something is out there with you in the darkness...",
-    text2: "Best find something to protect yourself with"
+    text1: "You hear footsteps creeping towards you in the distance. Something is out there with you in the darkness... Your danger PROTOCOL fires off, screaming at you to run to safety. Best find something to protect yourself with.",
+    text2: "Click the Left Mouse Button to Shoot. Bullets will bounce off walls and also travel through portals."
   },
 
   4: {
@@ -1569,8 +1647,8 @@ const levels = {
 
     enemies: [
       { pos: [ 800, 1100]},
-      { pos: [ 1000, 800], health: 10},
-      { pos: [ 1000, 600], health: 5},
+      { pos: [ 1000, 800], health: 15},
+      { pos: [ 1000, 600], health: 10},
       { pos: [ 100, 1000]},
       { pos: [ 1400, 200], health: 15}
 
@@ -1582,8 +1660,48 @@ const levels = {
     },
 
     name: "The darkness has eyes",
-    text1: "The monsters seem to be attracted to the light and the sound of gunfire.",
-    text2: "Best get used to the blackout and stay as quiet as possible..."
+    text1: "As you wander around the building, everything begins to feel almost nostalgic. \"How many times have I been here?\" You begin to feel hopeless; trapped in an endless LOOP.",
+    text2: "The monsters seem to be attracted to the light and the sound of gunfire. Best get used to the blackout and stay as quiet as possible..."
+  },
+
+  5: {
+    walls: [
+      {
+        topLeft: [0, 0],
+        bottomRight: [50, 2000],
+      },
+      {
+        topLeft: [0, 0],
+        bottomRight: [2000, 50],
+      },
+      {
+        topLeft: [1950, 0],
+        bottomRight: [2000, 2000],
+      },
+      {
+        topLeft: [0, 1950],
+        bottomRight: [2000, 2000],
+      },
+    ],
+    start: [1000, 1000],
+    goal:  {
+      topLeft: [3000, 3000],
+      bottomRight: [3000, 3000],
+    },
+    enemies: [
+      { pos: [ 100, 1900]},
+      { pos: [ 100, 100]},
+      { pos: [ 1900, 100]},
+      { pos: [ 1900, 1900]},
+
+      { pos: [ 1000, 300]},
+      { pos: [ 1000, 1700]},
+      { pos: [ 300, 1000]},
+      { pos: [ 1700, 1000]},
+
+
+    ],
+    name: "No Escape", 
   }
 };
 
