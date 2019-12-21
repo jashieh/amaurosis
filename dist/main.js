@@ -2011,7 +2011,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const radius = 30;
+const radius = 25;
 
 class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor(options) {
@@ -2459,8 +2459,8 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     ctx.drawImage(this.sprite, 
       sx, sy + 40, 123, 123,
-      -52, -50 + offsetY,
-      100, 100
+      -41, -40 + offsetY,
+      80, 80
     );
 
     // ctx.drawImage(this.sprite, 
@@ -2483,7 +2483,7 @@ class Player extends _moving_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     ctx.stroke();
 
-    if(this.i % 7 === 0) {
+    if(this.i % 15 === 0) {
       this.frame++;
     }
 
@@ -2592,6 +2592,9 @@ class Portal extends _static_object__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
       // let offsetX = (this.pos[0] - pos[0]);
       // let offsetY = (this.pos[1] - pos[1]);
+      // let offsetX = -20;
+      // let offsetY = -20;
+
       let offsetX = 0;
       let offsetY = 0;
   
