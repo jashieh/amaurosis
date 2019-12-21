@@ -856,24 +856,14 @@ class Game {
 
     
     
-    // this.wallCollision(this.players[0].pos);
     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
-    
     
     ctx.fillRect(0, 0, xView, yView);
     
     ctx.translate((xView/2 - this.players[0].pos[0]), (yView/2 - this.players[0].pos[1]))
-    // ctx.clearRect(0, 0, xView, yView);
     
     ctx.fillStyle = Game.BG_COLOR;
-    
-
-    // ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
-    
-    // ctx.translate(-this.players[0].pos[0],-this.players[0].pos[1])
-    // ctx.restore();
-    
-    
+        
     
     this.allObjects().forEach(object => {
       object.draw(ctx);
@@ -892,6 +882,7 @@ class Game {
 
     ctx.fillStyle = "#ffffff";
     ctx.fillText(`PRESS 'P' TO SKIP TO THE NEXT LEVEL`, this.players[0].pos[0] - Game.VIEW_X/2 + 10, this.players[0].pos[1] - Game.VIEW_Y/2 + 20);
+    ctx.fillText(`PRESS 'O' TO RETURN TO MENU`, this.players[0].pos[0] - Game.VIEW_X/2 + 10, this.players[0].pos[1] - Game.VIEW_Y/2 + 40);
 
 
     if(this.currentLevel === 5) {
@@ -1205,6 +1196,20 @@ class GameView {
     this.splashEle.style.visibility = "visible";
   }
 
+  restart() {
+    this.level = 1;
+    clearInterval(this.gameInt);
+    this.gameTimer = 0;
+    this.startScreen = true;
+    this.splash = true;
+
+    this.startLevel();
+    
+    this.splashEle.style.visibility = "visible";
+    document.getElementById("new-level").style.display = "none";
+    document.getElementById("start-screen").style.display = "flex";
+  }
+
   gameOver() {
     clearInterval(this.gameInt);
     this.gameTimer = 0;
@@ -1268,6 +1273,12 @@ class GameView {
         this.startLevel();
         this.splash = true;
         this.splashEle.style.visibility = "visible";
+      }
+    });
+
+    key("o", () => { 
+      if(!this.instructions && !this.endScreen) {
+        this.restart();
       }
     });
 
