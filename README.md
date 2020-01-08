@@ -1,5 +1,7 @@
 # <a href="https://jashieh.github.io/amaurosis" target="_blank">Amaurosis</a>
 
+![](https://github.com/jashieh/amaurosis/blob/master/game.gif)
+
 ## Gameplay
 Amaurosis minimalist birds-eye view sensory-deprivation experience that challenges players to solve complex puzzles without the traditional use of sight. Built using only JavaScript and HTML5 Canvas, players must navigate through a dark dungeon crawling with hidden enemies. Players may temporarily illuminate their surrounding with a "light", but beware, the monsters are attracted to the light. 
 
@@ -96,7 +98,6 @@ move() {
       const collisionY = this.game.wallCollision([newX, this.pos[1]]);
   
       const copy = this.pos;
-
 
       if(collisionX && collisionY) {
         return;
